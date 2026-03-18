@@ -9,21 +9,20 @@ async function loadScenario(type = 'SCAM') {
             let data = await res.json();
             currentScenarioId = data.id;
             
-            document.getElementById("sc-type").innerText = data.type === 'SCAM' ? '⚠️ FRAUD ALERT DETECTED' : '📄 TAX PREPARATION';
-            document.getElementById("sc-type").style.color = data.type === 'SCAM' ? 'var(--danger)' : 'var(--primary)';
+            document.getElementById("sc-type").innerText = data.type === 'SCAM' ? 'Safety Scenario' : 'Tax Scenario';
             document.getElementById("sc-title").innerText = data.title;
             document.getElementById("sc-desc").innerText = data.description;
             
             let actionsHTML = "";
             if(data.type === 'SCAM') {
                 actionsHTML = `
-                    <button class="btn btn-outline" style="flex: 1; border-color: var(--success); color: var(--success);" onclick="submitAnswer('DECLINE')">Decline & Report</button>
+                    <button class="btn btn-outline" style="flex: 1;" onclick="submitAnswer('DECLINE')">Decline & Report</button>
                     <button class="btn btn-danger" style="flex: 1;" onclick="submitAnswer('PAY')">Pay Amount</button>
                 `;
             } else {
                 actionsHTML = `
                     <button class="btn btn-primary" style="flex: 1" onclick="submitAnswer('YES')">Yes</button>
-                    <button class="btn btn-outline" style="flex: 1; border-color: var(--danger); color: var(--danger)" onclick="submitAnswer('NO')">No</button>
+                    <button class="btn btn-outline" style="flex: 1" onclick="submitAnswer('NO')">No</button>
                 `;
             }
             
@@ -50,10 +49,10 @@ async function submitAnswer(action) {
         resDiv.style.display = "block";
         
         if(data.correct) {
-            resDiv.innerHTML = `<strong class="text-success text-xl">SUCCESS!</strong><br><p class="mt-2 text-secondary">You made the right call.</p><div class="text-success mt-4 font-mono font-bold">+XP ${data.message}</div>`;
+            resDiv.innerHTML = `<strong class="text-success text-xl">Correct!</strong><br><p class="mt-2 text-secondary">You made the right decision.</p><div class="text-success mt-2 font-bold">+XP ${data.message}</div>`;
             resDiv.className = "scenario-result-box scenario-success";
         } else {
-            resDiv.innerHTML = `<strong class="text-danger text-xl">CRITICAL MISTAKE!</strong><br><p class="mt-2 text-secondary">This error just cost you hard-earned cash.</p><div class="text-danger mt-4 font-mono font-bold">Lost ₹500.00</div>`;
+            resDiv.innerHTML = `<strong class="text-danger text-xl">Incorrect</strong><br><p class="mt-2 text-secondary">This error has a financial penalty.</p><div class="text-danger mt-2 font-bold">Lost virtual currency</div>`;
             resDiv.className = "scenario-result-box scenario-danger";
         }
         

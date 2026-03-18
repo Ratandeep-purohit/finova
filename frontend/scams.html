@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finova - UPI Safety Simulator</title>
+    <title>Finova - Scenarios</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="dashboard-layout animate-fade-in">
+<body class="dashboard-layout">
     
     <aside class="sidebar">
-        <div class="logo">🚀 Finova</div>
+        <h1 class="logo" style="color: var(--primary);">Finova.</h1>
         <nav>
-            <div class="nav-label">Main menu</div>
+            <div class="nav-label">Menu</div>
             <ul>
-                <li><a href="/dashboard.html">🏠 Dashboard</a></li>
-                <li><a href="/leaderboard.html">🏆 Leaderboard</a></li>
+                <li><a href="/dashboard.html">Dashboard</a></li>
+                <li><a href="/leaderboard.html">Leaderboard</a></li>
             </ul>
-            <div class="nav-label">Learning Modules</div>
+            <div class="nav-label">Modules</div>
             <ul>
-                <li><a href="/stock_market.html">📈 Stock Simulator</a></li>
-                <li><a href="/scams.html" class="active">🛡️ UPI Safety</a></li>
-                <li><a href="/tax.html">📄 Tax Challenge</a></li>
+                <li><a href="/stock_market.html">Stock Market</a></li>
+                <li><a href="/scams.html" class="active">UPI Safety</a></li>
+                <li><a href="/tax.html">Tax Challenge</a></li>
             </ul>
             <div class="nav-label">Account</div>
             <ul>
-                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 1rem;">Log Out</button></li>
+                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 0.5rem;">Logout</button></li>
             </ul>
         </nav>
     </aside>
@@ -32,21 +32,20 @@
     <main class="content">
         <header class="topbar">
             <div>
-                <h2>🛡️ UPI Safety</h2>
-                <p class="text-secondary text-sm">Learn to spot online scams before they drain your account.</p>
+                <h2>UPI Safety</h2>
+                <p class="text-secondary text-sm">Identify digital scams and phishing links.</p>
             </div>
             <div class="user-stats">
-                <div class="stat-pill xp-pill">Lvl <span id="level-txt">1</span> | <span id="xp-txt">0</span> XP</div>
-                <div class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></div>
+                <span class="stat-pill xp-pill">Lvl <span id="level-txt">1</span></span>
+                <span class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></span>
             </div>
         </header>
 
-        <section class="center-content p-0" style="min-height: 50vh;">
+        <section class="center-content p-0" style="min-height: 40vh;">
             <div class="card" id="scenario-card" style="width: 100%; max-width: 500px; text-align: center;">
-                <div class="badge-icon mx-auto mb-4" style="color: var(--danger); margin: 0 auto; margin-bottom: 1rem;">📱</div>
-                <h3 id="sc-type" class="text-sm tracking-wide font-bold mb-2">Loading...</h3>
+                <h3 id="sc-type" class="text-sm text-secondary font-bold mb-2">Loading...</h3>
                 <h2 id="sc-title" class="text-xl mb-4 text-primary-color">Loading Scenario...</h2>
-                <p id="sc-desc" class="text-secondary mb-6"></p>
+                <p id="sc-desc" class="mb-6 mt-4"></p>
                 
                 <div id="sc-actions" class="flex gap-4 justify-between w-100">
                     <!-- populated by js -->

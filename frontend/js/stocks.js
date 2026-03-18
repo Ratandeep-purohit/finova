@@ -1,4 +1,4 @@
-const API_BASE = "/api";
+const API_BASE = "/api/v1";
 let currentUser = localStorage.getItem("finova_user");
 let oldPrices = {};
 
@@ -32,17 +32,17 @@ function renderStocks(stocks) {
         let oldPrice = oldPrices[st.symbol] || st.current_price;
         let diff = st.current_price - oldPrice;
         let pClass = diff >= 0 ? "text-success" : "text-danger";
-        let arrow = diff >= 0 ? "▲" : "▼";
+        let arrow = diff >= 0 ? "↑" : "↓";
         if (diff === 0) { arrow = "—"; pClass = "text-secondary"; }
 
         html += `
             <tr>
-                <td class="font-mono text-primary-color" style="font-weight: 700;">${st.symbol}</td>
+                <td style="font-weight: 600;">${st.symbol}</td>
                 <td class="text-secondary">${st.name}</td>
-                <td class="${pClass} font-mono font-bold">₹${st.current_price} <span class="text-xs ml-1">${arrow}</span></td>
+                <td class="${pClass}">₹${parseFloat(st.current_price).toFixed(2)} <span class="text-xs">${arrow}</span></td>
                 <td>
-                    <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="tradeStock(${st.id}, 10, 'buy')">Buy 10</button>
-                    <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-left: 0.5rem;" onclick="tradeStock(${st.id}, 10, 'sell')">Sell 10</button>
+                    <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="tradeStock(${st.id}, 10, 'buy')">Buy 10</button>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.5rem;" onclick="tradeStock(${st.id}, 10, 'sell')">Sell 10</button>
                 </td>
             </tr>
         `;
@@ -64,14 +64,14 @@ function renderPortfolio(portfolio) {
             let pClass = profit >= 0 ? "text-success" : "text-danger";
             
             html += `
-                <li style="margin-bottom: 0.5rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: rgba(0,0,0,0.2);">
+                <li style="margin-bottom: 0.5rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
                     <div class="flex justify-between items-center mb-1">
-                        <strong class="font-mono text-primary-color">${p.symbol}</strong>
+                        <strong class="font-bold">${p.symbol}</strong>
                         <span class="text-secondary text-sm">${p.quantity} shares</span>
                     </div>
-                    <div class="flex justify-between items-center text-sm font-mono mt-2">
-                        <span class="text-secondary">Avg: ₹${pr_avg.toFixed(2)} | Cur: ₹${pr_c.toFixed(2)}</span>
-                        <span class="${pClass} font-bold">${profit >= 0 ? '+' : '-'}₹${Math.abs(profit).toFixed(2)}</span>
+                    <div class="flex justify-between items-center text-sm mt-2">
+                        <span class="text-secondary">Avg: ₹${pr_avg.toFixed(2)} | Current: ₹${pr_c.toFixed(2)}</span>
+                        <span class="${pClass} font-bold">${profit >= 0 ? '+' : '-'}₹${Math.abs(profit).toFixed(2)} PnL</span>
                     </div>
                 </li>
             `;
@@ -84,8 +84,8 @@ function renderPortfolio(portfolio) {
 async function tradeStock(id, qty, action) {
     let msgObj = document.getElementById("market-msg");
     let errObj = document.getElementById("market-err");
-    msgObj.innerText = ""; msgObj.className = "success-msg font-mono text-center";
-    errObj.innerText = ""; errObj.className = "error-msg font-mono text-center";
+    msgObj.innerText = ""; msgObj.className = "text-center font-medium mb-4 text-success";
+    errObj.innerText = ""; errObj.className = "text-center font-medium mb-4 text-danger";
     
     let ep = action === 'buy' ? 'buy/' : 'sell/';
     try {
@@ -98,8 +98,8 @@ async function tradeStock(id, qty, action) {
         if(res.ok) {
             msgObj.innerText = data.message;
             if(data.profit !== undefined) {
-                msgObj.innerText += ` | PnL: ₹${parseFloat(data.profit).toFixed(2)}`;
-                msgObj.className = parseFloat(data.profit) >= 0 ? "success-msg font-mono text-center" : "error-msg font-mono text-center";
+                msgObj.innerText += ` | Net: ₹${parseFloat(data.profit).toFixed(2)}`;
+                msgObj.className = parseFloat(data.profit) >= 0 ? "text-center font-medium mb-4 text-success" : "text-center font-medium mb-4 text-danger";
             }
             fetchProfile(); // update balance on top
             fetchPortfolio();
