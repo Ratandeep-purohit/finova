@@ -6,49 +6,91 @@
     <title>Finova - Dashboard</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="dashboard-layout">
+<body class="dashboard-layout animate-fade-in">
     
     <aside class="sidebar">
-        <div class="logo">Finova.</div>
+        <div class="logo">🚀 Finova</div>
         <nav>
+            <div class="nav-label">Main menu</div>
             <ul>
-                <li><a href="/dashboard.html" class="active">Dashboard</a></li>
-                <li><a href="/stock_market.html">Stock Market</a></li>
-                <li><a href="/scams.html">Scam Simulator</a></li>
-                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 2rem;">Logout</button></li>
+                <li><a href="/dashboard.html" class="active">🏠 Dashboard</a></li>
+                <li><a href="/leaderboard.html">🏆 Leaderboard</a></li>
+            </ul>
+            <div class="nav-label">Learning Modules</div>
+            <ul>
+                <li><a href="/stock_market.html">📈 Stock Simulator</a></li>
+                <li><a href="/scams.html">🛡️ UPI Safety</a></li>
+                <li><a href="/tax.html">📄 Tax Challenge</a></li>
+            </ul>
+            <div class="nav-label">Account</div>
+            <ul>
+                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 1rem;">Log Out</button></li>
             </ul>
         </nav>
     </aside>
 
     <main class="content">
         <header class="topbar">
-            <h2>Dashboard</h2>
+            <div>
+                <h2>Dashboard</h2>
+                <p class="text-secondary text-sm">Welcome back to your financial journey</p>
+            </div>
             <div class="user-stats">
-                <div class="stat-pill"><span id="level-txt">Lvl 1</span></div>
-                <div class="stat-pill xp-pill"><span id="xp-txt">0 XP</span></div>
+                <div class="stat-pill" style="border-color: var(--accent); color: var(--accent);">🔥 3 Day Streak</div>
                 <div class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></div>
             </div>
         </header>
 
-        <section class="overview">
-            <div class="card welcome-card">
-                <h3>Welcome back, <span id="username-display">Hustler</span></h3>
-                <p>You have <span class="highlight" id="balance-big">₹10000.00</span> to your name. Don't lose it all in one place!</p>
+        <section class="overview mb-6">
+            <div class="card bg-primary text-white" style="background: linear-gradient(135deg, var(--primary), #818CF8); color: white; border: none;">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl" style="color: white; margin-bottom: 0;">Welcome, <span id="username-display">Hustler</span>! 👋</h1>
+                        <p style="color: rgba(255,255,255,0.8); margin-top: 0.5rem;">Net Worth: <strong style="font-size: 1.5rem;">₹<span id="balance-big">10000.00</span></strong></p>
+                    </div>
+                    <div style="text-align: right; min-width: 200px;">
+                        <h4 style="color: white; margin-bottom: 0.2rem;">Level <span id="level-txt">1</span></h4>
+                        <div class="progress-bar-bg" style="background: rgba(255,255,255,0.2);">
+                            <div class="progress-bar-fill" id="xp-bar" style="width: 20%; background: white;"></div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 0.8rem; margin-top: 0.5rem;"><span id="xp-txt">0</span> / 100 XP to next level</p>
+                    </div>
+                </div>
             </div>
         </section>
 
+        <div class="grid-3 mb-6">
+            <div class="card">
+                <h3 class="flex items-center gap-2"><div class="badge-icon" style="color: var(--accent);">🏆</div> Rookie Trader</h3>
+                <p class="text-secondary text-sm mt-2">Finish your first stock trade to earn this badge.</p>
+            </div>
+            <div class="card">
+                <h3 class="flex items-center gap-2"><div class="badge-icon" style="color: var(--success);">🛡️</div> Scam Spotter</h3>
+                <p class="text-secondary text-sm mt-2">Successfully identify 5 phishing or UPI scams.</p>
+            </div>
+            <div class="card">
+                <h3 class="flex items-center gap-2"><div class="badge-icon" style="color: #6366f1;">📄</div> Tax Expert</h3>
+                <p class="text-secondary text-sm mt-2">Complete the Tax basics module without errors.</p>
+            </div>
+        </div>
+
         <section class="missions">
-            <h3>Today's Missions</h3>
-            <div class="grid">
-                <div class="card md-card">
-                    <h4>First Trade</h4>
-                    <p>Head to the Stock Market and buy your first share.</p>
-                    <a href="/stock_market.html" class="btn btn-primary">Go to Market</a>
+            <h3>🎯 Today's Interactive Missions</h3>
+            <p class="text-secondary mb-4 text-sm">Complete these daily challenges to earn XP and boost your ranking.</p>
+            <div class="grid-2">
+                <div class="card md-card" style="border-left: 4px solid var(--primary);">
+                    <div>
+                        <h4 class="flex justify-between">First Trade <span class="text-primary-color">+20 XP</span></h4>
+                        <p class="text-secondary text-sm mb-4">Head over to the Stock Market simulator. Buy 10 shares of any company to understand volatility.</p>
+                    </div>
+                    <a href="/stock_market.html" class="btn btn-primary w-100">Trade Now</a>
                 </div>
-                <div class="card md-card">
-                    <h4>Stay Safe</h4>
-                    <p>Complete 1 scam scenario without getting robbed.</p>
-                    <a href="/scams.html" class="btn btn-primary">Try Scenario</a>
+                <div class="card md-card" style="border-left: 4px solid var(--danger);">
+                    <div>
+                        <h4 class="flex justify-between">Survive a Scam <span class="text-primary-color">+50 XP</span></h4>
+                        <p class="text-secondary text-sm mb-4">A random number says you won an iPhone. Test your instincts in the UPI Safety Module.</p>
+                    </div>
+                    <a href="/scams.html" class="btn btn-primary w-100">Play Scenario</a>
                 </div>
             </div>
         </section>
@@ -57,9 +99,15 @@
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/dashboard.js"></script>
     <script>
-        // Init fetch
         authCheck();
-        fetchProfile();
+        fetchProfile().then(() => {
+            // Update XP bar logic locally
+            let xp = parseInt(document.getElementById('xp-txt').innerText);
+            let lvl = parseInt(document.getElementById('level-txt').innerText);
+            let requiredXp = lvl * 100;
+            let percent = (xp / requiredXp) * 100;
+            document.getElementById('xp-bar').style.width = Math.min(percent, 100) + '%';
+        });
     </script>
 </body>
 </html>

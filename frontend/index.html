@@ -3,21 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finova - Login</title>
+    <title>Finova - Learn Finance</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+        }
+        .login-card {
+            border-top: 4px solid var(--primary);
+            box-shadow: var(--shadow-lg);
+            border-radius: 12px;
+            padding: 2.5rem;
+            max-width: 420px;
+        }
+    </style>
 </head>
 <body class="center-content">
-    <div class="card login-card">
-        <h1>Finova.</h1>
-        <p>Learn Finance. Try not to go broke.</p>
+    
+    <div class="card login-card animate-fade-in">
+        <div class="logo justify-center mb-2" style="margin-bottom: 0.5rem; justify-content: center;">🚀 Finova.</div>
+        <p class="text-center text-secondary mb-6 text-sm">Gamified financial literacy for the real world.</p>
+        
         <div class="form-group">
-            <input type="text" id="username" placeholder="Username" required>
+            <label class="form-label" for="username">Pick a Username</label>
+            <input type="text" id="username" placeholder="e.g. WallStreetWhiz" required>
         </div>
-        <div class="form-group">
-            <input type="password" id="password" placeholder="Password" required>
+        <div class="form-group mb-6">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
         </div>
-        <div id="login-error" class="error-msg"></div>
-        <button class="btn btn-primary w-100" onclick="login()">Login / Register</button>
+        
+        <div id="login-error" class="error-msg text-center font-medium"></div>
+        <button class="btn btn-primary w-100" onclick="login()">Start Playing 🎮</button>
+        
+        <p class="text-xs text-secondary text-center mt-4">If an account doesn't exist, we will create one for you instantly.</p>
     </div>
 
     <script src="/static/js/auth.js"></script>

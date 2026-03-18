@@ -12,4 +12,6 @@ urlpatterns = [
     path('dashboard.html', TemplateView.as_view(template_name='dashboard.html')),
     path('stock_market.html', TemplateView.as_view(template_name='stock_market.html')),
     path('scams.html', TemplateView.as_view(template_name='scams.html')),
+    path('tax.html', TemplateView.as_view(template_name='tax.html')),
+    path('leaderboard.html', TemplateView.as_view(template_name='leaderboard.html')),
 ]

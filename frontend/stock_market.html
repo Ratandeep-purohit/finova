@@ -3,42 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finova - Stock Market</title>
+    <title>Finova - Stock Simulator</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .price-up { color: var(--success); font-weight: bold; }
+        .price-down { color: var(--danger); font-weight: bold; }
+        .card-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-color); }
+    </style>
 </head>
-<body class="dashboard-layout">
+<body class="dashboard-layout animate-fade-in">
     
     <aside class="sidebar">
-        <div class="logo">Finova.</div>
+        <div class="logo">🚀 Finova</div>
         <nav>
+            <div class="nav-label">Main menu</div>
             <ul>
-                <li><a href="/dashboard.html">Dashboard</a></li>
-                <li><a href="/stock_market.html" class="active">Stock Market</a></li>
-                <li><a href="/scams.html">Scam Simulator</a></li>
-                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 2rem;">Logout</button></li>
+                <li><a href="/dashboard.html">🏠 Dashboard</a></li>
+                <li><a href="/leaderboard.html">🏆 Leaderboard</a></li>
+            </ul>
+            <div class="nav-label">Learning Modules</div>
+            <ul>
+                <li><a href="/stock_market.html" class="active">📈 Stock Simulator</a></li>
+                <li><a href="/scams.html">🛡️ UPI Safety</a></li>
+                <li><a href="/tax.html">📄 Tax Challenge</a></li>
+            </ul>
+            <div class="nav-label">Account</div>
+            <ul>
+                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 1rem;">Log Out</button></li>
             </ul>
         </nav>
     </aside>
 
     <main class="content">
         <header class="topbar">
-            <h2>Stock Market</h2>
+            <div>
+                <h2>📈 Stock Simulator</h2>
+                <p class="text-secondary text-sm">Experience real market volatility with fake money.</p>
+            </div>
             <div class="user-stats">
-                <div class="stat-pill"><span id="level-txt">Lvl 1</span></div>
-                <div class="stat-pill xp-pill"><span id="xp-txt">0 XP</span></div>
+                <div class="stat-pill xp-pill">Lvl <span id="level-txt">1</span> | <span id="xp-txt">0</span> XP</div>
                 <div class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></div>
             </div>
         </header>
 
         <section class="overview">
-            <div id="market-msg" class="success-msg"></div>
-            <div id="market-err" class="error-msg"></div>
+            <div id="market-msg" class="success-msg text-center font-medium"></div>
+            <div id="market-err" class="error-msg text-center font-medium"></div>
 
-            <div class="grid" style="grid-template-columns: 2fr 1fr;">
-                <div class="card">
-                    <h3>Available Stocks</h3>
-                    <p class="text-secondary" style="margin-bottom: 1rem; font-size: 0.9rem;">Prices fluctuate automatically every 5 seconds.</p>
-                    <div class="table-wrapper">
+            <div class="grid-2">
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div class="card-header">
+                        <h3 class="text-xl">Market Movers</h3>
+                        <p class="text-sm text-secondary">Prices update automatically every 5 seconds.</p>
+                    </div>
+                    <div class="table-wrapper" style="border: none; border-radius: 0; box-shadow: none;">
                         <table>
                             <thead>
                                 <tr>
@@ -55,16 +73,18 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <h3>Your Portfolio</h3>
-                    <div id="portfolio-list" style="margin-top: 1rem;">
+                <div class="card" style="padding: 0; overflow: hidden; height: fit-content;">
+                    <div class="card-header">
+                        <h3 class="text-xl text-primary-color">Your Portfolio</h3>
+                        <p class="text-sm text-secondary">Assets you currently own.</p>
+                    </div>
+                    <div id="portfolio-list" style="padding: 1.5rem;">
                         <!-- Populated by JS -->
-                        <p class="text-secondary">You don't own any stocks yet.</p>
+                        <p class="text-secondary text-center p-6">You don't own any stocks yet. Make your first trade!</p>
                     </div>
                 </div>
             </div>
         </section>
-
     </main>
 
     <script src="/static/js/auth.js"></script>

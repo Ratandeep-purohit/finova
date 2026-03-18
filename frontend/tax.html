@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finova - UPI Safety Simulator</title>
+    <title>Finova - Tax Challenge</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body class="dashboard-layout animate-fade-in">
@@ -19,8 +19,8 @@
             <div class="nav-label">Learning Modules</div>
             <ul>
                 <li><a href="/stock_market.html">📈 Stock Simulator</a></li>
-                <li><a href="/scams.html" class="active">🛡️ UPI Safety</a></li>
-                <li><a href="/tax.html">📄 Tax Challenge</a></li>
+                <li><a href="/scams.html">🛡️ UPI Safety</a></li>
+                <li><a href="/tax.html" class="active">📄 Tax Challenge</a></li>
             </ul>
             <div class="nav-label">Account</div>
             <ul>
@@ -32,8 +32,8 @@
     <main class="content">
         <header class="topbar">
             <div>
-                <h2>🛡️ UPI Safety</h2>
-                <p class="text-secondary text-sm">Learn to spot online scams before they drain your account.</p>
+                <h2>📄 Tax Challenge</h2>
+                <p class="text-secondary text-sm">Understand exactly why we pay taxes, and how to file them.</p>
             </div>
             <div class="user-stats">
                 <div class="stat-pill xp-pill">Lvl <span id="level-txt">1</span> | <span id="xp-txt">0</span> XP</div>
@@ -43,7 +43,7 @@
 
         <section class="center-content p-0" style="min-height: 50vh;">
             <div class="card" id="scenario-card" style="width: 100%; max-width: 500px; text-align: center;">
-                <div class="badge-icon mx-auto mb-4" style="color: var(--danger); margin: 0 auto; margin-bottom: 1rem;">📱</div>
+                <div class="badge-icon mx-auto mb-4" style="color: var(--primary); margin: 0 auto; margin-bottom: 1rem;">🧾</div>
                 <h3 id="sc-type" class="text-sm tracking-wide font-bold mb-2">Loading...</h3>
                 <h2 id="sc-title" class="text-xl mb-4 text-primary-color">Loading Scenario...</h2>
                 <p id="sc-desc" class="text-secondary mb-6"></p>
@@ -53,7 +53,7 @@
                 </div>
                 
                 <div id="sc-result" style="display: none; text-align: left;"></div>
-                <button class="btn btn-primary w-100 mt-4" id="next-btn" style="display: none;" onclick="loadScenario('SCAM')">Next Scenario</button>
+                <button class="btn btn-outline w-100 mt-4" id="next-btn" style="display: none;" onclick="loadScenario('TAX')">Next Challenge</button>
             </div>
         </section>
 
@@ -65,7 +65,7 @@
     <script>
         authCheck();
         fetchProfile();
-        loadScenario('SCAM');
+        loadScenario('TAX');
     </script>
 </body>
 </html>
