@@ -1,86 +1,345 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finova - Dashboard</title>
+    <title>Finova - Mission Control</title>
     <link rel="stylesheet" href="/static/css/style.css">
-</head>
+    <style>
+        /* ── Dashboard Specific Layout ───────────────────────────── */
+        .dash-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .dash-container { grid-template-columns: 1fr; }
+        }
 
+        /* ── Glassmorphism Hero Card ─────────────────────────────── */
+        .hero-card {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.25);
+            margin-bottom: 2rem;
+        }
+        .hero-card::after {
+            content: ''; position: absolute; top: -50%; right: -20%;
+            width: 300px; height: 300px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; filter: blur(40px);
+        }
+        .hero-title { font-size: 1.1rem; opacity: 0.9; margin-bottom: 0.5rem; font-weight: 500; }
+        .hero-balance { font-size: 2.8rem; font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 0.5rem; }
+        .hero-badge { 
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            padding: 0.3rem 0.8rem; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* ── Interactive Shortcut Grid ───────────────────────────── */
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 600px) { .shortcut-grid { grid-template-columns: 1fr; } }
+        
+        .shortcut-tile {
+            background: var(--surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 1.25rem;
+            text-decoration: none; color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .shortcut-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.06);
+            border-color: var(--primary);
+        }
+        .tile-icon {
+            width: 42px; height: 42px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; margin-bottom: 0.5rem;
+        }
+        .icon-trade { background: #eff6ff; color: #3b82f6; }
+        .icon-safe  { background: #f0fdf4; color: #166534; }
+        .icon-tax   { background: #fdf4ff; color: #a21caf; }
+        .tile-title { font-weight: 700; font-size: 1.05rem; }
+        .tile-desc  { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
+
+        /* ── Right Panel: Mini Portfolio ─────────────────────────── */
+        .side-panel { display: flex; flex-direction: column; gap: 1.5rem; }
+        .side-card {
+            background: var(--surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .side-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary); display: flex; justify-content: space-between; align-items: center;}
+        
+        .asset-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.8rem 0; border-bottom: 1px solid var(--border-color);
+        }
+        .asset-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .asset-sym  { font-weight: 700; font-size: 0.95rem; }
+        .asset-qty  { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+        .asset-val  { font-weight: 700; font-size: 0.95rem; text-align: right; }
+        .asset-pnl  { font-size: 0.8rem; text-align: right; margin-top: 2px; }
+
+        /* ── Level Progress ──────────────────────────────────────── */
+        .progress-wrap { background: var(--bg-color); height: 8px; border-radius: 999px; overflow: hidden; margin-top: 0.5rem; }
+        .progress-fill { background: linear-gradient(90deg, #3b82f6, #8b5cf6); height: 100%; width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .level-badges { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-top: 0.4rem; color: var(--text-secondary); }
+    </style>
+</head>
 <body class="dashboard-layout">
 
-    <aside class="sidebar">
-        <h1 class="logo" style="color: var(--primary);">Finova.</h1>
-        <nav>
-            <div class="nav-label">Menu</div>
-            <ul>
-                <li><a href="/dashboard.html" class="active">Dashboard</a></li>
-                <li><a href="/leaderboard.html">Leaderboard</a></li>
-            </ul>
-            <div class="nav-label">Modules</div>
-            <ul>
-                <li><a href="/stock_market.html">Stock Market</a></li>
-                <li><a href="/scams.html">UPI Safety</a></li>
-                <li><a href="/tax.html">Tax Challenge</a></li>
-            </ul>
-            <div class="nav-label">Account</div>
-            <ul>
-                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 0.5rem;">Logout</button>
-                </li>
-            </ul>
-        </nav>
-    </aside>
+<aside class="sidebar">
+    <h1 class="logo" style="color:#fff;">Finova.</h1>
+    <nav>
+        <div class="nav-label">Menu</div>
+        <ul>
+            <li><a href="/dashboard.html" class="active">Mission Control</a></li>
+            <li><a href="/leaderboard.html">Leaderboard</a></li>
+        </ul>
+        <div class="nav-label">Simulators</div>
+        <ul>
+            <li><a href="/stock_market.html">Stock Market</a></li>
+            <li><a href="/scams.html">UPI Safety</a></li>
+            <li><a href="/tax.html">Tax Challenge</a></li>
+        </ul>
+        <div class="nav-label">Learning</div>
+        <ul>
+            <li><a href="/videos.html">Video Library</a></li>
+        </ul>
+        <div class="nav-label">Account</div>
+        <ul>
+            <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top:0.5rem;">Logout</button></li>
+        </ul>
+    </nav>
+</aside>
 
-    <main class="content">
-        <header class="topbar">
-            <div>
-                <h2>Dashboard</h2>
-            </div>
-            <div class="user-stats">
-                <span class="stat-pill xp-pill"><span id="level-txt">1</span></span>
-                <span class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></span>
-            </div>
-        </header>
+<main class="content">
+    <header class="topbar">
+        <div>
+            <h2>Dashboard</h2>
+            <p class="text-secondary text-sm">Welcome back. Here is your financial overview.</p>
+        </div>
+        <div class="user-stats">
+            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
+            <span class="stat-pill balance-pill">Rs.<span id="balance-txt">0.00</span></span>
+        </div>
+    </header>
 
-        <section class="mb-6">
-            <div class="card" style="border-left: 4px solid var(--primary);">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="mb-2">Welcome, <span id="username-display">User</span></h3>
-                        <p class="text-secondary text-sm">Your net worth is <strong>₹<span
-                                    id="balance-big">10000.00</span></strong></p>
+    <div class="dash-container">
+        
+        <!-- ── Left Column ── -->
+        <div>
+            <!-- Hero Card -->
+            <div class="hero-card">
+                <div class="hero-title" id="greetingUser">Good Afternoon, Explorer</div>
+                <div class="hero-balance">
+                    Rs.<span id="dash-balance">0.00</span>
+                    <span class="hero-badge" id="dash-lvl">Level 1</span>
+                </div>
+                <p style="margin-top:0.5rem; font-size:0.85rem; opacity:0.85;">Total Liquid Cash</p>
+                
+                <div style="margin-top:2rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600;">
+                        <span>XP Progress</span>
+                        <span id="dash-xp">0 XP</span>
+                    </div>
+                    <div class="progress-wrap">
+                        <div class="progress-fill" id="xp-bar"></div>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <section>
-            <h3 class="mb-4">Daily Missions</h3>
-            <div class="grid-2">
-                <div class="card">
-                    <h4 class="flex justify-between">First Trade <span class="text-sm text-primary-color">+20 XP</span>
-                    </h4>
-                    <p class="text-secondary text-sm mb-4 mt-2">Go to the Stock Market and buy shares of any company.
-                    </p>
-                    <a href="/stock_market.html" class="btn btn-primary w-100">Trade Now</a>
-                </div>
-                <div class="card">
-                    <h4 class="flex justify-between">Avoid Phishing <span class="text-sm text-primary-color">+50
-                            XP</span></h4>
-                    <p class="text-secondary text-sm mb-4 mt-2">Test your instincts in the UPI Safety Module.</p>
-                    <a href="/scams.html" class="btn btn-primary w-100">Play Scenario</a>
+            <!-- Quick Shortcuts -->
+            <h3 style="margin-bottom:1rem; color:var(--text-primary); font-size:1.1rem;">Quick Modules</h3>
+            <div class="shortcut-grid">
+                <a href="/stock_market.html" class="shortcut-tile">
+                    <div class="tile-icon icon-trade">📈</div>
+                    <div class="tile-title">Live Market</div>
+                    <div class="tile-desc">Buy, sell, and grow your virtual portfolio.</div>
+                </a>
+                <a href="/scams.html" class="shortcut-tile">
+                    <div class="tile-icon icon-safe">🛡️</div>
+                    <div class="tile-title">UPI Safety</div>
+                    <div class="tile-desc">Spot phishing, decline scams, save money.</div>
+                </a>
+                <a href="/tax.html" class="shortcut-tile">
+                    <div class="tile-icon icon-tax">📄</div>
+                    <div class="tile-title">Tax Engine</div>
+                    <div class="tile-desc">Review tax files and challenge the rules.</div>
+                </a>
+            </div>
+            
+            <!-- Gamification Tip -->
+            <div style="background:var(--surface); border:1px solid #bae6fd; border-radius:var(--radius-md); padding:1rem 1.25rem; display:flex; gap:1rem; align-items:center;">
+                <div style="font-size:2rem;">💡</div>
+                <div>
+                    <h4 style="margin:0 0 0.25rem 0; color:#0369a1; font-size:0.95rem;">Pro Tip</h4>
+                    <p style="margin:0; font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">Consistent correct answers across security modules build up your 'Streak', multiplying your XP gains. Keep your portfolio diverse to survive market drops.</p>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
 
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/dashboard.js"></script>
-    <script>
-        authCheck();
-        fetchProfile();
-    </script>
+        <!-- ── Right Column ── -->
+        <div class="side-panel">
+            
+            <!-- Mini Portfolio Widget -->
+            <div class="side-card">
+                <div class="side-title">
+                    <span>My Assets</span>
+                    <a href="/stock_market.html" style="font-size:0.8rem; color:var(--primary); text-decoration:none; font-weight:600;">Trade →</a>
+                </div>
+                <div id="mini-portfolio">
+                    <p class="text-secondary text-center" style="font-size:0.8rem; padding:1.5rem 0;">Fetching live assets...</p>
+                </div>
+            </div>
+
+            <!-- Daily Goals Checklist -->
+            <div class="side-card">
+                <div class="side-title">Daily Missions</div>
+                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                    
+                    <label style="display:flex; gap:0.75rem; align-items:flex-start;">
+                        <input type="checkbox" id="chk-invest" disabled style="margin-top:0.2rem; cursor:not-allowed;">
+                        <div>
+                            <div style="font-weight:700; font-size:0.9rem; color:var(--text-primary);">First Investment</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Buy at least 5 shares of any stock</div>
+                        </div>
+                    </label>
+
+                    <label style="display:flex; gap:0.75rem; align-items:flex-start;">
+                        <input type="checkbox" id="chk-safety" disabled style="margin-top:0.2rem; cursor:not-allowed;">
+                        <div>
+                            <div style="font-weight:700; font-size:0.9rem; color:var(--text-primary);">Safety Inspector</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Complete 3 UPI Safety Scenarios</div>
+                        </div>
+                    </label>
+
+                    <label style="display:flex; gap:0.75rem; align-items:flex-start;">
+                        <input type="checkbox" id="chk-tax" disabled style="margin-top:0.2rem; cursor:not-allowed;">
+                        <div>
+                            <div style="font-weight:700; font-size:0.9rem; color:var(--text-primary);">Tax Maestro</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Earn a 2x Streak in the Tax Challenge</div>
+                        </div>
+                    </label>
+                    
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+</main>
+
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script>
+    authCheck();
+
+    // Custom fetch for dashboard specific stats
+    async function initDashboard() {
+        const user = localStorage.getItem('finova_user');
+        if(!user) return;
+        
+        // Time based greeting
+        const hr = new Date().getHours();
+        let greet = hr < 12 ? "Good Morning" : hr < 18 ? "Good Afternoon" : "Good Evening";
+        document.getElementById('greetingUser').innerText = `${greet}, ${user}`;
+
+        // Check missions
+        const storageKey = `finova_missions_${user}`;
+        let md = JSON.parse(localStorage.getItem(storageKey) || "{}");
+        if(md.invest) document.getElementById('chk-invest').checked = true;
+        if(md.safety) document.getElementById('chk-safety').checked = true;
+        if(md.tax)    document.getElementById('chk-tax').checked = true;
+
+        try {
+            // Fetch User Profile
+            const pRes = await fetch(`${API_BASE}/user/profile/?username=${encodeURIComponent(user)}`);
+            if (pRes.ok) {
+                const data = await pRes.json();
+                
+                // Update specific dashboard elements
+                document.getElementById('dash-balance').innerText = parseFloat(data.balance).toFixed(0);
+                document.getElementById('dash-lvl').innerText = `Level ${data.level}`;
+                document.getElementById('dash-xp').innerText = `${data.xp} XP`;
+                
+                // Calculate level progress (simulate that every 500 XP is a level)
+                const xpForNext = data.level * 500;
+                let pct = (data.xp / xpForNext) * 100;
+                if(pct > 100) pct = 100;
+                document.getElementById('xp-bar').style.width = pct + '%';
+            }
+
+            // Fetch Mini Portfolio
+            const portRes = await fetch(`${API_BASE}/stocks/portfolio/?username=${encodeURIComponent(user)}`);
+            if (portRes.ok) {
+                const portData = await portRes.json();
+                renderMiniPortfolio(portData);
+            }
+        } catch(e) {
+            console.error("Dashboard init error", e);
+            document.getElementById('mini-portfolio').innerHTML = `<p class="text-danger text-sm">Failed to load assets.</p>`;
+        }
+    }
+
+    function renderMiniPortfolio(items) {
+        const el = document.getElementById('mini-portfolio');
+        if (!items || items.length === 0) {
+            el.innerHTML = `<div style="text-align:center; padding: 1rem 0;">
+                <div style="font-size:2rem; margin-bottom:0.5rem; opacity:0.5;">📈</div>
+                <div style="font-size:0.85rem; color:var(--text-secondary);">No investments yet.</div>
+            </div>`;
+            return;
+        }
+
+        let html = '';
+        // Only show top 3 assets to keep dashboard clean
+        items.slice(0, 3).forEach(p => {
+            const cur = parseFloat(p.current_price);
+            const avg = parseFloat(p.average_buy_price);
+            const val = cur * p.quantity;
+            const pnl = (cur - avg) * p.quantity;
+            const cls = pnl >= 0 ? '#16a34a' : '#dc2626';
+            const sign = pnl >= 0 ? '+' : '';
+
+            html += `
+            <div class="asset-row">
+                <div>
+                    <div class="asset-sym">${p.symbol}</div>
+                    <div class="asset-qty">${p.quantity} shares</div>
+                </div>
+                <div>
+                    <div class="asset-val">Rs.${val.toFixed(0)}</div>
+                    <div class="asset-pnl" style="color:${cls};">${sign}${pnl.toFixed(0)}</div>
+                </div>
+            </div>`;
+        });
+        
+        if (items.length > 3) {
+            html += `<div style="text-align:center; margin-top:0.8rem;">
+                <a href="/stock_market.html" style="font-size:0.75rem; color:var(--text-secondary); text-decoration:none;">View ${items.length - 3} more assets →</a>
+            </div>`;
+        }
+        el.innerHTML = html;
+    }
+
+    // Call base dashboard profile fetch from dashboard.js, then dashboard specific
+    fetchProfile().then(() => initDashboard());
+
+</script>
 </body>
-
 </html>

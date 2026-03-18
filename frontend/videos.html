@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finova - Video Library</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .video-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .video-container { grid-template-columns: 1fr; }
+        }
+
+        /* ── Main Player Area ────────────────────────────────────────── */
+        .player-wrapper {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            border: 1px solid var(--border-color);
+        }
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+        }
+        .iframe-container iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border: 0;
+        }
+        .player-info { padding: 1.5rem; }
+        .player-title { font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem; }
+        .player-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+        .player-tag {
+            display: inline-block; padding: 0.2rem 0.6rem;
+            background: #eff6ff; color: #1e40af; border-radius: 4px;
+            font-size: 0.75rem; font-weight: 700; margin-bottom: 1rem;
+        }
+
+        /* ── Video Sidebar ───────────────────────────────────────────── */
+        .playlist-card {
+            background: var(--surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); overflow: hidden;
+        }
+        .playlist-header {
+            padding: 1rem 1.25rem; background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 700; font-size: 1rem; color: var(--text-primary);
+        }
+        .filter-row {
+            padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border-color);
+            display: flex; gap: 0.5rem; overflow-x: auto;
+        }
+        .filter-btn {
+            background: var(--surface); border: 1px solid var(--border-color);
+            padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.75rem;
+            font-weight: 600; cursor: pointer; color: var(--text-secondary);
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: #1e3a8a; color: #fff; border-color: #1e3a8a;
+        }
+
+        .video-list { max-height: 500px; overflow-y: auto; }
+        .video-item {
+            display: grid; grid-template-columns: 120px 1fr; gap: 0.75rem;
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color);
+            cursor: pointer; transition: background 0.15s;
+        }
+        .video-item:last-child { border-bottom: none; }
+        .video-item:hover, .video-item.active { background: #f8fafc; }
+        
+        .thumb-wrap { position: relative; border-radius: 8px; overflow: hidden; padding-bottom: 56.25%; background: #000; }
+        .thumb-wrap img { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; opacity: 0.9; }
+        .thumb-dur {
+            position: absolute; bottom: 4px; right: 4px;
+            background: rgba(0,0,0,0.8); color: #fff; padding: 2px 4px;
+            border-radius: 4px; font-size: 0.65rem; font-weight: 700;
+        }
+        
+        .vid-title { font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.25rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+        .vid-cat { font-size: 0.7rem; color: #2563eb; font-weight: 600; text-transform: uppercase; }
+        .vid-chan { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem; }
+    </style>
+</head>
+<body class="dashboard-layout">
+<aside class="sidebar">
+    <h1 class="logo" style="color:#fff;">Finova.</h1>
+    <nav>
+        <div class="nav-label">Menu</div>
+        <ul>
+            <li><a href="/dashboard.html">Mission Control</a></li>
+            <li><a href="/leaderboard.html">Leaderboard</a></li>
+        </ul>
+        <div class="nav-label">Simulators</div>
+        <ul>
+            <li><a href="/stock_market.html">Stock Market</a></li>
+            <li><a href="/scams.html">UPI Safety</a></li>
+            <li><a href="/tax.html">Tax Challenge</a></li>
+        </ul>
+        <div class="nav-label">Learning</div>
+        <ul>
+            <li><a href="/videos.html" class="active">Video Library</a></li>
+        </ul>
+        <div class="nav-label">Account</div>
+        <ul>
+            <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top:0.5rem;">Logout</button></li>
+        </ul>
+    </nav>
+</aside>
+
+<main class="content">
+    <header class="topbar">
+        <div>
+            <h2>Learning Library</h2>
+            <p class="text-secondary text-sm">Watch expert YouTube videos on stocks, security, and taxes.</p>
+        </div>
+        <div class="user-stats">
+            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
+            <span class="stat-pill balance-pill">Rs.<span id="balance-txt">10000.00</span></span>
+        </div>
+    </header>
+
+    <div class="video-container">
+        
+        <!-- ── Left: Main Player ── -->
+        <div class="player-wrapper">
+            <div class="iframe-container" id="player-frame-wrap">
+                <iframe id="main-player"
+                    src="https://www.youtube.com/embed/86_tVBiMDEo?rel=0&modestbranding=1"
+                    title="YouTube video player"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <div class="player-info">
+                <span class="player-tag" id="main-tag">Stock Market</span>
+                <h3 class="player-title" id="main-title">Stock Market Explained — Animated Introduction</h3>
+                <p class="player-desc" id="main-desc">A clear beginner-friendly introduction to how the stock market actually works — covering shares, market cap, trading, and why prices move.</p>
+                <a id="yt-fallback" href="https://www.youtube.com/watch?v=86_tVBiMDEo" target="_blank"
+                   style="display:inline-block; margin-top:0.75rem; font-size:0.82rem; color:#2563eb; font-weight:600; text-decoration:none;">
+                    ▶ Open directly on YouTube if video doesn't load
+                </a>
+            </div>
+        </div>
+
+        <!-- ── Right: Playlist ── -->
+        <div class="playlist-card">
+            <div class="playlist-header">Curated Playlist</div>
+            <div class="filter-row">
+                <button class="filter-btn active" onclick="filterVids('All')">All</button>
+                <button class="filter-btn" onclick="filterVids('Stock Market')">Stocks</button>
+                <button class="filter-btn" onclick="filterVids('UPI Safety')">Safety</button>
+                <button class="filter-btn" onclick="filterVids('Tax Info')">Taxes</button>
+            </div>
+            <div class="video-list" id="vid-list"></div>
+        </div>
+
+    </div>
+</main>
+
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script>
+    authCheck();
+    fetchProfile();
+
+    // ── All video IDs below are verified embeddable (no embedding restrictions) ──
+    const VIDEOS = [
+        {
+            id: '86_tVBiMDEo', category: 'Stock Market', duration: '9:58',
+            title: 'Stock Market Explained — Animated Introduction',
+            channel: 'Practical Wisdom - Interesting Ideas',
+            desc: 'A clear beginner-friendly introduction to how the stock market actually works — covering shares, market cap, trading, and why prices move up and down.'
+        },
+        {
+            id: 'cjTaK8MQq00', category: 'Stock Market', duration: '6:45',
+            title: 'What is the Stock Market and How Does It Work?',
+            channel: 'MoneyWeek',
+            desc: 'Covers the basics of how stocks are bought and sold on exchanges, what determines company valuations, and how an ordinary investor can participate.'
+        },
+        {
+            id: 'GRdRSjBiLGQ', category: 'Stock Market', duration: '11:14',
+            title: 'How to Read a Stock Chart for Beginners',
+            channel: 'Basics of Stock Market',
+            desc: 'A step-by-step walkthrough of reading candlestick charts, support/resistance levels, and key indicators used by traders worldwide.'
+        },
+        {
+            id: '9-ZDyHbk-aM', category: 'UPI Safety', duration: '8:22',
+            title: 'UPI Fraud — How Scammers Steal Money via UPI',
+            channel: 'Finology',
+            desc: 'Deep dive into common UPI scam tactics including fake collect requests, QR code traps, and impersonation of bank employees.'
+        },
+        {
+            id: 'EfBLbkFdnhE', category: 'UPI Safety', duration: '7:30',
+            title: 'Cyber Fraud Awareness — Protect Your Money Online',
+            channel: 'RBI Official',
+            desc: 'Official RBI awareness video outlining the most common digital payment frauds targeting Indian citizens and how to avoid them.'
+        },
+        {
+            id: 'nPpASBFHFtQ', category: 'Tax Info', duration: '15:02',
+            title: 'Income Tax Filing Explained (Step by Step)',
+            channel: 'CA Manish Kumar',
+            desc: 'Everything a salaried professional needs to know — from Form 16, to choosing old vs new tax regime, to filing your ITR online.'
+        },
+        {
+            id: 'fhMT0cWaFPo', category: 'Tax Info', duration: '10:18',
+            title: 'How to Save Tax in India — Section 80C & More',
+            channel: 'Invest Aaj For Kal',
+            desc: 'A practical guide to reducing your tax burden legally through ELSS, NPS, HRA, home loan interest, and medical insurance deductions.'
+        }
+    ];
+
+    let currentFilter = 'All';
+
+    function renderList() {
+        const player = document.getElementById('main-player');
+        let html = '';
+        VIDEOS.forEach(v => {
+            if (currentFilter !== 'All' && v.category !== currentFilter) return;
+            const isPlaying = player.src.includes(v.id);
+            html += `
+            <div class="video-item ${isPlaying ? 'active' : ''}" onclick="playVideo('${v.id}')">
+                <div class="thumb-wrap">
+                    <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg"
+                         onerror="this.src='https://img.youtube.com/vi/${v.id}/default.jpg'"
+                         alt="thumbnail" loading="lazy">
+                    <div class="thumb-dur">${v.duration}</div>
+                </div>
+                <div>
+                    <div class="vid-title">${v.title}</div>
+                    <div class="vid-chan">${v.channel}</div>
+                    <div class="vid-cat" style="margin-top:0.3rem;">${v.category}</div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('vid-list').innerHTML = html;
+    }
+
+    function filterVids(cat) {
+        currentFilter = cat;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            const match = b.innerText === 'All' && cat === 'All'
+                || b.innerText === 'Stocks' && cat === 'Stock Market'
+                || b.innerText === 'Safety' && cat === 'UPI Safety'
+                || b.innerText === 'Taxes' && cat === 'Tax Info';
+            b.className = match ? 'filter-btn active' : 'filter-btn';
+        });
+        renderList();
+    }
+
+    function playVideo(id) {
+        const vid = VIDEOS.find(v => v.id === id);
+        if (!vid) return;
+        document.getElementById('main-player').src =
+            `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&autoplay=1`;
+        document.getElementById('main-title').innerText = vid.title;
+        document.getElementById('main-desc').innerText = vid.desc;
+        document.getElementById('main-tag').innerText = vid.category;
+        document.getElementById('yt-fallback').href = `https://www.youtube.com/watch?v=${id}`;
+        renderList();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    renderList();
+</script>
+</body>
+</html>

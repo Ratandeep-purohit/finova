@@ -15,4 +15,5 @@ urlpatterns = [
     path('scams.html', TemplateView.as_view(template_name='scams.html')),
     path('tax.html', TemplateView.as_view(template_name='tax.html')),
     path('leaderboard.html', TemplateView.as_view(template_name='leaderboard.html')),
+    path('videos.html', TemplateView.as_view(template_name='videos.html')),
 ]

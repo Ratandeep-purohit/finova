@@ -118,6 +118,10 @@
             <li><a href="/scams.html">UPI Safety</a></li>
             <li><a href="/tax.html">Tax Challenge</a></li>
         </ul>
+        <div class="nav-label">Learning</div>
+        <ul>
+            <li><a href="/videos.html">Video Library</a></li>
+        </ul>
         <div class="nav-label">Account</div>
         <ul>
             <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top:0.5rem;">Logout</button></li>
@@ -341,6 +345,10 @@
                     const pnlEl = document.getElementById('stat-pnl');
                     pnlEl.innerText = (_sessionPnL >= 0 ? '+' : '') + 'Rs.' + _sessionPnL.toFixed(2);
                     pnlEl.style.color = _sessionPnL >= 0 ? '#16a34a' : '#dc2626';
+                }
+
+                if (action === 'buy' && qty >= 5) {
+                    if(typeof checkAndRewardMission === 'function') checkAndRewardMission('invest', 50);
                 }
 
                 _toast(msg, 'success');

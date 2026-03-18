@@ -64,6 +64,27 @@ def get_profile(request):
     profile = UserProfile.objects.get(user__username=username)
     return Response(UserProfileSerializer(profile).data)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def claim_mission_reward(request):
+    username = request.data.get('username')
+    xp = request.data.get('xp', 0)
+    try:
+        profile = UserProfile.objects.get(user__username=username)
+        profile.xp += int(xp)
+        if profile.xp < 0:
+            profile.xp = 0
+            
+        # Optional basic leveling up formula: level = (xp / 500) + 1
+        new_level = (profile.xp // 500) + 1
+        if new_level > profile.level:
+            profile.level = new_level
+            
+        profile.save()
+        return Response({'message': 'Reward claimed!', 'xp': profile.xp, 'level': profile.level})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_leaderboard(request):

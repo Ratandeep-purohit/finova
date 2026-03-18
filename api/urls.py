@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    register, user_login, get_profile, get_leaderboard,
+    register, user_login, get_profile, get_leaderboard, claim_mission_reward,
     get_stocks, buy_stock, sell_stock, get_portfolio,
     get_random_scenario, get_all_scenarios, answer_scenario
 )
@@ -10,6 +10,7 @@ urlpatterns = [
     path('auth/login/', user_login, name='login'),
     
     path('user/profile/', get_profile, name='get_profile'),
+    path('user/reward/', claim_mission_reward, name='claim_reward'),
     path('leaderboard/', get_leaderboard, name='leaderboard'),
     
     path('stocks/', get_stocks, name='get_stocks'),

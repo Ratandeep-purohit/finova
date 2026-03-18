@@ -67,11 +67,13 @@ function _advance() {
     // Progress
     const num = _idx + 1, tot = _all.length;
     _setText('q-counter', 'Question ' + num + ' of ' + tot);
+    _setText('q-number',  'Question ' + num);
     _setPct('q-progress', Math.round((num / tot) * 100));
 
-    // Render
+    // Render — allow page-level override for custom designs
     if (_type === 'SCAM') _renderScam(_item);
-    else                  _renderTax(_item);
+    else if (typeof window._renderTaxOverride === 'function') window._renderTaxOverride(_item);
+    else _renderTax(_item);
 }
 
 // ── SCAM renderer ────────────────────────────────────────────
@@ -205,6 +207,11 @@ async function submitAnswer(action) {
             _flashXP(true, xp);
             _setStreak(_streak);
             _showResult(true, data.message, 0, xp, _item.explanation || '');
+
+            if (typeof checkAndRewardMission === 'function') {
+                if (_type === 'SCAM' && _correct >= 3) checkAndRewardMission('safety', 50);
+                if (_type === 'TAX' && _streak >= 2) checkAndRewardMission('tax', 50);
+            }
         } else {
             _wrong++;
             _streak = 0;
@@ -237,13 +244,17 @@ function _showResult(ok, msg, penalty, xpGain, explanation) {
     if (!card) return;
 
     if (ok) {
-        if (verdict) verdict.className = 'explain-verdict correct';
-        if (icon) icon.innerText   = 'Correct Answer!';
-        if (change) change.innerText = xpGain ? '+' + xpGain + ' XP' : '';
+        if (verdict) verdict.className = 'explain-verdict correct result-header correct';
+        if (icon)    icon.innerText   = 'Correct Answer!';
+        if (change)  change.innerText = xpGain ? '+' + xpGain + ' XP' : '';
+        const em = document.getElementById('result-emoji');
+        if (em) em.innerText = '✅';
     } else {
-        if (verdict) verdict.className = 'explain-verdict wrong';
-        if (icon) icon.innerText   = 'Wrong Answer';
-        if (change) change.innerText = penalty ? 'Rs.' + parseFloat(penalty).toFixed(0) + ' deducted' : '';
+        if (verdict) verdict.className = 'explain-verdict wrong result-header wrong';
+        if (icon)    icon.innerText   = 'Wrong Answer';
+        if (change)  change.innerText = penalty ? 'Rs.' + parseFloat(penalty).toFixed(0) + ' deducted' : '';
+        const em = document.getElementById('result-emoji');
+        if (em) em.innerText = '❌';
     }
 
     // Show explanation text

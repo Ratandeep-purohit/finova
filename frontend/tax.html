@@ -6,71 +6,355 @@
     <title>Finova – Tax Challenge</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        .module-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
-        
-        /* ── Document Card ───────────────────────────────────────── */
-        .doc-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-        .doc-header { background: #1e3a8a; color: #fff; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; }
-        .doc-header-left h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
-        .doc-header-left p  { font-size: 0.75rem; opacity: 0.7; }
-        .doc-stamp { border: 2px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
-        
-        .doc-progress-strip { background: #1e40af; height: 4px; }
-        .doc-progress-fill  { height: 100%; background: #60a5fa; transition: width 0.4s; }
-        
-        .doc-cat-banner { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1.5rem; background: #f0f9ff; border-bottom: 1px solid #bae6fd; font-size: 0.82rem; }
-        .cat-icon { font-size: 1.5rem; }
-        .cat-label { font-weight: 700; color: #0c4a6e; font-size: 0.8rem; }
-        
-        .doc-body { padding: 1.5rem; }
-        .doc-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-primary); }
-        .doc-question { font-size: 0.9rem; line-height: 1.75; color: var(--text-primary); background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--border-color); border-left: 4px solid #1e3a8a; padding: 1rem 1.25rem; }
+        /* ── Game layout ─────────────────────────────────── */
+        .tax-game-wrap {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media(max-width:900px){ .tax-game-wrap { grid-template-columns:1fr; } }
 
-        /* ── Actions ─────────────────────────────────────────────── */
-        .action-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
-        .choice-btn { padding: 0.85rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
-        .choice-safe  { background: #1e3a8a; color: #fff; border: none; }
-        .choice-safe:hover  { filter: brightness(1.15); transform: translateY(-1px); }
-        .choice-risky { background: #fef2f2; color: #991b1b; border: 2px solid #fca5a5; }
-        .choice-risky:hover { background: #fee2e2; transform: translateY(-1px); }
+        /* ── Top stat bar ─────────────────────────────────── */
+        .game-statbar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-gem {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .stat-gem::before {
+            content: '';
+            position: absolute; top:0; left:0; right:0; height:3px;
+        }
+        .gem-xp::before   { background: linear-gradient(90deg,#6366f1,#8b5cf6); }
+        .gem-score::before { background: linear-gradient(90deg,#10b981,#059669); }
+        .gem-wrong::before { background: linear-gradient(90deg,#f43f5e,#e11d48); }
+        .gem-streak::before { background: linear-gradient(90deg,#f59e0b,#d97706); }
+        .gem-val { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+        .gem-lbl { font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.25rem; }
 
-        /* ── Explanation Flip Card ────────────────────────────────── */
-        .explain-card { display: none; margin-top: 1.25rem; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-color); animation: slideDown 0.35s ease; }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
-        
-        .explain-verdict { padding: 1.25rem 1.5rem; font-size: 1.1rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-        .explain-verdict.correct { background: #166534; color: #fff; }
-        .explain-verdict.wrong   { background: #991b1b; color: #fff; }
-        
-        .verdict-change { font-size: 0.85rem; padding: 0.2rem 0.6rem; background: rgba(255,255,255,0.2); border-radius: 999px; }
-        .explain-body { background: #fff; padding: 1.25rem 1.5rem; }
-        .explain-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 0.4rem; }
-        .explain-text { font-size: 0.875rem; line-height: 1.7; color: var(--text-primary); }
+        /* ── Question Card ─────────────────────────────────── */
+        .q-card {
+            background: var(--surface);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
-        /* ── Component utils ─────────────────────────────────────── */
-        .xp-flash { display: none; padding: 0.4rem 0.9rem; border-radius: 999px; font-weight: 700; font-size: 0.85rem; animation: popIn 0.4s cubic-bezier(.175,.885,.32,1.275); }
-        .xp-flash.gain { background: #dcfce7; color: #166534; }
-        .xp-flash.loss { background: #fee2e2; color: #991b1b; }
-        @keyframes popIn { 0%{transform:scale(0.6);opacity:0} 100%{transform:scale(1);opacity:1} }
+        /* Card header: gradient by category */
+        .q-card-header {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .q-card-header.cat-salary   { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+        .q-card-header.cat-document { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+        .q-card-header.cat-form     { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+        .q-card-header.cat-news     { background: linear-gradient(135deg, #b45309, #fbbf24); }
 
-        .streak-badge { background: #f59e0b; color: #fff; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; margin-left: 0.5rem; display: none; }
+        .q-category-pill {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(8px);
+            border-radius: 999px;
+            padding: 0.3rem 0.85rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+        .q-number {
+            font-size: 0.8rem;
+            opacity: 0.75;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+        .q-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+        .q-mascot {
+            font-size: 3rem;
+            user-select: none;
+            animation: mascotBob 2s ease-in-out infinite;
+        }
+        @keyframes mascotBob {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-6px); }
+        }
 
-        .right-panel { display: flex; flex-direction: column; gap: 1rem; }
-        .info-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; }
-        .score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; }
-        .score-box  { text-align:center; padding:0.75rem; background:var(--bg-color); border-radius:var(--radius-sm); }
-        .score-val  { font-size:1.4rem; font-weight:700; }
-        .xp-bar-bg { height: 8px; background: var(--bg-color); border-radius: 4px; margin-top: 0.4rem; }
-        .xp-bar-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease; }
+        /* Progress bar inside card header */
+        .q-progress-bar {
+            height: 5px;
+            background: rgba(255,255,255,0.2);
+        }
+        .q-progress-fill {
+            height: 100%;
+            background: rgba(255,255,255,0.85);
+            transition: width 0.5s ease;
+        }
 
-        .tax-bracket { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 0.4rem; }
-        .bracket-range { font-weight: 700; flex: 1; color: var(--text-primary); }
-        .bracket-rate  { background: #1e3a8a; color: #fff; border-radius: 4px; padding: 0.15rem 0.5rem; font-size: 0.72rem; font-weight: 700; }
+        /* Question body */
+        .q-body { padding: 2rem; }
+        .q-scenario-text {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px dashed #e2e8f0;
+            padding: 1.25rem 1.5rem;
+            position: relative;
+        }
+        .q-scenario-text::before {
+            content: '📖';
+            position: absolute;
+            top: -14px; left: 20px;
+            background: #f8fafc;
+            padding: 0 6px;
+            font-size: 1.2rem;
+        }
 
-        @media (max-width: 900px) { .module-grid { grid-template-columns:1fr; } }
+        /* Answer buttons */
+        .answer-zone {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.75rem;
+        }
+        .ans-btn {
+            border: none;
+            border-radius: 14px;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+        .ans-btn:hover:not(:disabled) {
+            transform: translateY(-4px) scale(1.02);
+        }
+        .ans-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.97);
+        }
+        .ans-yes {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #fff;
+            box-shadow: 0 6px 15px rgba(5,150,105,0.3);
+        }
+        .ans-no {
+            background: linear-gradient(135deg, #dc2626, #f43f5e);
+            color: #fff;
+            box-shadow: 0 6px 15px rgba(220,38,38,0.3);
+        }
+        .ans-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* ── Result card (after answer) ────────────────────── */
+        .result-card {
+            display: none;
+            margin-top: 1.5rem;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            animation: resultPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes resultPop {
+            from { opacity: 0; transform: scale(0.85); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .result-header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .result-header.correct { background: linear-gradient(135deg, #065f46, #059669); color:#fff; }
+        .result-header.wrong   { background: linear-gradient(135deg, #7f1d1d, #dc2626); color:#fff; }
+        .result-emoji { font-size: 2.5rem; }
+        .result-title { font-size: 1.3rem; font-weight: 800; }
+        .result-points { 
+            background: rgba(255,255,255,0.2);
+            border-radius: 999px;
+            padding: 0.35rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .result-body { background: var(--surface); padding: 1.5rem 2rem; }
+        .result-what-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .result-explain {
+            font-size: 0.95rem;
+            line-height: 1.75;
+            color: var(--text-primary);
+        }
+        .next-btn-wrap { margin-top: 1.5rem; }
+        .btn-next-q {
+            width: 100%;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-next-q:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        /* ── XP Pop animation ─────────────────────────── */
+        .xp-pop {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1.5rem;
+            font-weight: 900;
+            z-index: 9999;
+            animation: xpFly 1.6s ease-out forwards;
+        }
+        @keyframes xpFly {
+            0%   { opacity: 1; transform: translateY(0) scale(1); }
+            70%  { opacity: 1; transform: translateY(-80px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-120px) scale(0.8); }
+        }
+
+        /* ── Streak fire badge ─────────────────────────── */
+        .streak-fire {
+            display: none;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: #fff;
+            border-radius: 999px;
+            padding: 0.35rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 800;
+            animation: pulseBadge 0.8s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes pulseBadge {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* ── Right sidebar ─────────────────────────────── */
+        .right-sidebar { display: flex; flex-direction: column; gap: 1.2rem; }
+        .side-panel {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .side-panel-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            margin-bottom: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        /* Slab bar chart */
+        .slab-row { margin-bottom: 0.7rem; }
+        .slab-label { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .slab-bar-bg { height: 8px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+        .slab-bar-fill { height: 100%; border-radius: 999px; }
+        .slab-0  { background: #d1fae5; width: 5%; }
+        .slab-5  { background: #bae6fd; width: 20%; }
+        .slab-20 { background: #fef08a; width: 60%; }
+        .slab-30 { background: #fca5a5; width: 100%; }
+
+        /* Deduction pill list */
+        .deduction-pill {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 0.4rem;
+            font-size: 0.8rem;
+        }
+        .deduction-pill strong { color: #1d4ed8; }
+
+        /* Accuracy circle */
+        .accuracy-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .circle-stat {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(#10b981 0% var(--pct,0%), #f1f5f9 var(--pct,0%) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #065f46;
+            position: relative;
+        }
+        .circle-stat::before {
+            content: '';
+            position: absolute;
+            inset: 12px;
+            background: white;
+            border-radius: 50%;
+        }
+        .circle-stat span { position: relative; z-index: 1; }
+
+        /* XP flash in header row */
+        .xp-flash-badge {
+            display: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            animation: popIn 0.4s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .xp-flash-badge.gain { background: #dcfce7; color: #166534; }
+        .xp-flash-badge.loss { background: #fee2e2; color: #991b1b; }
+        @keyframes popIn { 0%{transform:scale(0.4);opacity:0}100%{transform:scale(1);opacity:1} }
+
+        .q-counter-text { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
     </style>
 </head>
 <body class="dashboard-layout">
+
+<!-- ── Sidebar ── -->
 <aside class="sidebar">
     <h1 class="logo" style="color:#fff;">Finova.</h1>
     <nav>
@@ -85,6 +369,10 @@
             <li><a href="/scams.html">UPI Safety</a></li>
             <li><a href="/tax.html" class="active">Tax Challenge</a></li>
         </ul>
+        <div class="nav-label">Learning</div>
+        <ul>
+            <li><a href="/videos.html">Video Library</a></li>
+        </ul>
         <div class="nav-label">Account</div>
         <ul>
             <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top:0.5rem;">Logout</button></li>
@@ -92,11 +380,12 @@
     </nav>
 </aside>
 
+<!-- ── Main content ── -->
 <main class="content">
     <header class="topbar">
         <div>
             <h2>Tax Challenge</h2>
-            <p class="text-secondary text-sm">Review real Indian tax laws and choose Yes or No.</p>
+            <p class="text-secondary text-sm">Judge real Indian tax rules — True or False!</p>
         </div>
         <div class="user-stats">
             <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
@@ -104,108 +393,137 @@
         </div>
     </header>
 
-    <div class="module-grid">
-        <!-- Left: Document card -->
+    <!-- ── Top stat gems ── -->
+    <div class="game-statbar">
+        <div class="stat-gem gem-xp">
+            <div class="gem-val" id="score-xp" style="color:#6366f1;">0</div>
+            <div class="gem-lbl">XP Earned</div>
+        </div>
+        <div class="stat-gem gem-score">
+            <div class="gem-val" id="score-correct" style="color:#10b981;">0</div>
+            <div class="gem-lbl">Correct</div>
+        </div>
+        <div class="stat-gem gem-wrong">
+            <div class="gem-val" id="score-wrong" style="color:#f43f5e;">0</div>
+            <div class="gem-lbl">Wrong</div>
+        </div>
+        <div class="stat-gem gem-streak">
+            <div class="gem-val" id="streak-count" style="color:#f59e0b;">0🔥</div>
+            <div class="gem-lbl">Streak</div>
+        </div>
+    </div>
+
+    <div class="tax-game-wrap">
+
+        <!-- ── Left: Question zone ── -->
         <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                <span id="streak-badge" class="streak-badge">3 streak!</span>
-                <span id="q-counter" class="text-secondary text-sm">Loading...</span>
-                <span class="xp-flash" id="xp-flash"></span>
+            <!-- Header bar: counter + badge + flash -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <span class="q-counter-text" id="q-counter">Loading question...</span>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <span class="streak-fire" id="streak-badge">🔥 on fire!</span>
+                    <span class="xp-flash-badge" id="xp-flash"></span>
+                </div>
             </div>
 
-            <div class="doc-card">
-                <div class="doc-header">
-                    <div class="doc-header-left">
-                        <h3 id="sc-title">Loading tax scenario...</h3>
-                        <p>Government of India — Income Tax / Finance Act</p>
-                    </div>
-                    <div class="doc-stamp" id="doc-stamp">Section</div>
-                </div>
-                <!-- Progress strip -->
-                <div class="doc-progress-strip">
-                    <div class="doc-progress-fill" id="q-progress" style="width:0%"></div>
-                </div>
-                <!-- Category banner -->
-                <div class="doc-cat-banner">
-                    <div class="cat-icon" id="cat-icon">📄</div>
+            <!-- Question card -->
+            <div class="q-card" id="q-card">
+                <div class="q-card-header" id="q-card-header">
                     <div>
-                        <div class="cat-label" id="cat-label">Tax Topic</div>
-                        <div class="text-secondary text-sm">Read carefully and answer Yes or No</div>
+                        <div class="q-number" id="q-number">Question 1</div>
+                        <div class="q-title" id="sc-title">Loading...</div>
+                    </div>
+                    <div>
+                        <div class="q-mascot" id="q-mascot">🧑‍💼</div>
+                        <div class="q-category-pill" id="cat-label">Tax</div>
                     </div>
                 </div>
-                <!-- Body -->
-                <div class="doc-body">
-                    <div class="doc-question" id="sc-desc">Please wait while questions load.</div>
-                    
-                    <!-- Action buttons container -->
-                    <div id="action-zone" class="action-zone"></div>
+                <div class="q-progress-bar">
+                    <div class="q-progress-fill" id="q-progress" style="width:0%"></div>
+                </div>
+                <div class="q-body">
+                    <div class="q-scenario-text" id="sc-desc">
+                        Please wait while we load your tax scenario...
+                    </div>
+                    <div id="action-zone" class="answer-zone"></div>
                 </div>
             </div>
 
-            <!-- Explanation Card -->
-            <div id="explain-card" class="explain-card">
-                <div class="explain-verdict" id="explain-verdict">
-                    <span id="verdict-icon">Correct!</span>
-                    <span class="verdict-change" id="verdict-change"></span>
+            <!-- Result card -->
+            <div id="explain-card" class="result-card">
+                <div class="result-header" id="explain-verdict">
+                    <div>
+                        <div class="result-emoji" id="result-emoji">✅</div>
+                        <div class="result-title" id="verdict-icon">Correct!</div>
+                    </div>
+                    <span class="result-points" id="verdict-change"></span>
                 </div>
-                <div class="explain-body">
-                    <div class="explain-label">Tax Rule Applied</div>
-                    <div class="explain-text" id="explain-text"></div>
-                    <button id="next-btn" class="btn btn-primary" style="margin-top:1.5rem; width:100%;">Next Question</button>
+                <div class="result-body">
+                    <div class="result-what-label">What the law says</div>
+                    <div class="result-explain" id="explain-text"></div>
+                    <div class="next-btn-wrap">
+                        <button id="next-btn" class="btn-next-q">
+                            Next Question &nbsp;→
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right panel -->
-        <div class="right-panel">
-            <div class="info-card">
-                <h3 style="margin-bottom:1rem;">Session Score</h3>
-                <div class="score-grid">
-                    <div class="score-box">
-                        <div class="score-val text-success" id="score-correct">0</div>
-                        <div class="text-secondary text-sm">Correct</div>
-                    </div>
-                    <div class="score-box">
-                        <div class="score-val text-danger" id="score-wrong">0</div>
-                        <div class="text-secondary text-sm">Wrong</div>
-                    </div>
-                    <div class="score-box">
-                        <div class="score-val text-primary-color" id="score-xp">0</div>
-                        <div class="text-secondary text-sm">XP</div>
+        <!-- ── Right sidebar ── -->
+        <div class="right-sidebar">
+
+            <!-- Accuracy circle -->
+            <div class="side-panel" style="text-align:center;">
+                <div class="side-panel-title">Accuracy</div>
+                <div class="accuracy-wrap">
+                    <div class="circle-stat" id="accuracy-circle" style="--pct:0%;">
+                        <span id="accuracy-val">—</span>
                     </div>
                 </div>
-                <div style="margin-top:1rem;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                        <span class="text-secondary">Accuracy</span>
-                        <span id="accuracy-val" class="font-bold">—</span>
-                    </div>
-                    <div class="xp-bar-bg"><div class="xp-bar-fill" id="accuracy-bar" style="width:0%"></div></div>
+                <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.5rem;">
+                    Session accuracy
                 </div>
             </div>
 
-            <!-- Tax Slabs Quick Reference -->
-            <div class="info-card">
-                <h3 style="margin-bottom:0.75rem;">India Tax Slabs (Old Regime)</h3>
-                <div class="tax-bracket"><span class="bracket-range">Up to Rs.2.5L</span><span class="bracket-rate">0%</span></div>
-                <div class="tax-bracket"><span class="bracket-range">Rs.2.5L – Rs.5L</span><span class="bracket-rate">5%</span></div>
-                <div class="tax-bracket"><span class="bracket-range">Rs.5L – Rs.10L</span><span class="bracket-rate">20%</span></div>
-                <div class="tax-bracket"><span class="bracket-range">Above Rs.10L</span><span class="bracket-rate">30%</span></div>
+            <!-- Tax Slabs visual -->
+            <div class="side-panel">
+                <div class="side-panel-title">India Tax Slabs (Old Regime)</div>
+                <div class="slab-row">
+                    <div class="slab-label"><span>Up to Rs.2.5L</span><span style="color:#059669; font-weight:800;">Nil</span></div>
+                    <div class="slab-bar-bg"><div class="slab-bar-fill slab-0"></div></div>
+                </div>
+                <div class="slab-row">
+                    <div class="slab-label"><span>Rs.2.5L – 5L</span><span style="color:#0284c7; font-weight:800;">5%</span></div>
+                    <div class="slab-bar-bg"><div class="slab-bar-fill slab-5"></div></div>
+                </div>
+                <div class="slab-row">
+                    <div class="slab-label"><span>Rs.5L – 10L</span><span style="color:#ca8a04; font-weight:800;">20%</span></div>
+                    <div class="slab-bar-bg"><div class="slab-bar-fill slab-20"></div></div>
+                </div>
+                <div class="slab-row" style="margin-bottom:0;">
+                    <div class="slab-label"><span>Above Rs.10L</span><span style="color:#dc2626; font-weight:800;">30%</span></div>
+                    <div class="slab-bar-bg"><div class="slab-bar-fill slab-30"></div></div>
+                </div>
             </div>
 
             <!-- Key Deductions -->
-            <div class="info-card">
-                <h3 style="margin-bottom:0.75rem;">Key Deductions</h3>
-                <div style="font-size:0.8rem; display:flex; flex-direction:column; gap:0.4rem;">
-                    <div style="display:flex; justify-content:space-between;"><span>Section 80C</span><strong>Rs.1.5L</strong></div>
-                    <div style="display:flex; justify-content:space-between;"><span>Section 80CCD(1B)</span><strong>+Rs.50K</strong></div>
-                    <div style="display:flex; justify-content:space-between;"><span>Section 80D</span><strong>Rs.25K</strong></div>
-                    <div style="display:flex; justify-content:space-between;"><span>Standard Deduction</span><strong>Rs.50K</strong></div>
-                    <div style="display:flex; justify-content:space-between;"><span>Home Loan Interest</span><strong>Rs.2L</strong></div>
-                </div>
+            <div class="side-panel">
+                <div class="side-panel-title">Key Deductions Cheatsheet</div>
+                <div class="deduction-pill"><span>Section 80C</span><strong>Rs.1.5L</strong></div>
+                <div class="deduction-pill"><span>80CCD(1B) – NPS</span><strong>+Rs.50K</strong></div>
+                <div class="deduction-pill"><span>Section 80D – Health</span><strong>Rs.25K</strong></div>
+                <div class="deduction-pill"><span>Standard Deduction</span><strong>Rs.50K</strong></div>
+                <div class="deduction-pill" style="margin-bottom:0;"><span>Home Loan Interest</span><strong>Rs.2L</strong></div>
             </div>
+
         </div>
+
     </div>
 </main>
+
+<!-- ── Floating XP pop container ── -->
+<div id="xp-pop-root"></div>
 
 <script src="/static/js/auth.js"></script>
 <script src="/static/js/dashboard.js"></script>
@@ -213,6 +531,101 @@
 <script>
     authCheck();
     fetchProfile();
+
+    // ── Mascot map by category ─────────────────────────
+    const CAT_CONFIG = {
+        salary:   { emoji: '💼', label: 'Salary & TDS',    headerClass: 'cat-salary',   mascot: '🧑‍💼' },
+        document: { emoji: '📊', label: 'Capital Gains',   headerClass: 'cat-document',  mascot: '📈' },
+        form:     { emoji: '📋', label: 'Deductions',      headerClass: 'cat-form',      mascot: '🧮' },
+        news:     { emoji: '📰', label: 'Tax Facts',       headerClass: 'cat-news',      mascot: '🏛️' },
+    };
+
+    // Override the tax renderer in scenarios.js to use our new design
+    window._renderTaxOverride = function(item) {
+        const cfg = CAT_CONFIG[item.hint_type] || { emoji:'📄', label:'Income Tax', headerClass:'cat-salary', mascot:'🧑‍💼' };
+
+        // Update card header class
+        const hdr = document.getElementById('q-card-header');
+        if(hdr) {
+            hdr.className = 'q-card-header ' + cfg.headerClass;
+        }
+
+        document.getElementById('q-mascot') && (document.getElementById('q-mascot').innerText = cfg.mascot);
+        document.getElementById('cat-label') && (document.getElementById('cat-label').innerText = cfg.label);
+        document.getElementById('sc-title') && (document.getElementById('sc-title').innerText = item.title || 'Tax Scenario');
+        document.getElementById('sc-desc')  && (document.getElementById('sc-desc').innerText  = item.description || '');
+
+        // Rebuild buttons
+        const zone = document.getElementById('action-zone');
+        if(zone) zone.innerHTML = `
+            <button id="btn-yes" class="ans-btn ans-yes" onclick="submitAnswer('YES')">
+                ✅ TRUE
+            </button>
+            <button id="btn-no" class="ans-btn ans-no" onclick="submitAnswer('NO')">
+                ❌ FALSE
+            </button>`;
+
+        // Animate card in
+        const card = document.getElementById('q-card');
+        if(card) {
+            card.style.animation = 'none';
+            card.offsetHeight; // reflow
+            card.style.animation = 'cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        }
+    };
+
+    // Override streak display
+    window._setStreakOverride = function(n) {
+        document.getElementById('streak-count').innerText = n + (n > 0 ? '🔥' : '');
+        const badge = document.getElementById('streak-badge');
+        if(n >= 2) {
+            badge.style.display = 'inline-block';
+            badge.innerText = '🔥 ' + n + 'x Streak!';
+            badge.style.animation = 'none';
+            badge.offsetHeight;
+            badge.style.animation = 'pulseBadge 0.8s cubic-bezier(0.34,1.56,0.64,1)';
+        } else {
+            badge.style.display = 'none';
+        }
+    };
+
+    // Launch an XP pop animation centered on screen
+    function _spawnXPPop(text, color) {
+        const root = document.getElementById('xp-pop-root');
+        const el = document.createElement('div');
+        el.className = 'xp-pop';
+        el.innerText = text;
+        el.style.color = color;
+        el.style.left = (window.innerWidth / 2 - 60) + 'px';
+        el.style.top  = (window.innerHeight / 2) + 'px';
+        root.appendChild(el);
+        setTimeout(() => el.remove(), 1600);
+    }
+
+    // Override XP flash in scenarios.js
+    window._flashXPOverride = function(isGain, amount) {
+        const fl = document.getElementById('xp-flash');
+        fl.className = 'xp-flash-badge ' + (isGain ? 'gain' : 'loss');
+        fl.innerText = isGain ? '+' + amount + ' XP' : '-Rs.' + amount;
+        fl.style.display = 'inline-block';
+        setTimeout(() => { fl.style.display = 'none'; }, 2500);
+        _spawnXPPop(isGain ? '+' + amount + ' XP' : '-Rs.' + amount, isGain ? '#16a34a' : '#dc2626');
+    };
+
+    // Accuracy circle update
+    function _updateAccuracyCircle(correct, total) {
+        if(total === 0) return;
+        const pct = Math.round((correct / total) * 100);
+        document.getElementById('accuracy-val').innerText = pct + '%';
+        document.getElementById('accuracy-circle').style.setProperty('--pct', pct + '%');
+    }
+
+    // Patch scenarios.js _updateScore to also call our circle
+    const _origUpdateScore = window._scenarioUpdateScore;
+    document.addEventListener('scenariosScoreUpdate', e => {
+        if(e && e.detail) _updateAccuracyCircle(e.detail.correct, e.detail.total);
+    });
+
     initScenarioModule('TAX');
 </script>
 </body>
