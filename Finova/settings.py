@@ -15,6 +15,11 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ── YouTube Data API v3 Key ────────────────────────────────────────────────
+# Get a free key at: https://console.cloud.google.com → Enable YouTube Data API v3
+# Paste your key below. Free tier = 10,000 units/day (100 searches/day).
+YOUTUBE_API_KEY = 'YOUR_YOUTUBE_API_KEY_HERE'
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/

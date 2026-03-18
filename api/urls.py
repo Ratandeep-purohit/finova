@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     register, user_login, get_profile, get_leaderboard, claim_mission_reward, convert_xp,
     get_stocks, buy_stock, sell_stock, get_portfolio,
-    get_random_scenario, get_all_scenarios, answer_scenario
+    get_random_scenario, get_all_scenarios, answer_scenario,
+    search_youtube, tax_chat, evaluate_upi_text,
 )
 
 urlpatterns = [
@@ -22,4 +23,9 @@ urlpatterns = [
     path('scenarios/', get_random_scenario, name='get_scenario'),
     path('scenarios/all/', get_all_scenarios, name='get_all_scenarios'),
     path('scenarios/answer/', answer_scenario, name='answer_scenario'),
+    path('scenarios/evaluate-text/', evaluate_upi_text, name='evaluate_upi_text'),
+
+    path('videos/search/', search_youtube, name='search_youtube'),
+    path('tax/chat/', tax_chat, name='tax_chat'),
 ]
+

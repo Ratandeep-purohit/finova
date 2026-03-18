@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -392,8 +392,7 @@
             <p class="text-secondary text-sm">Judge real Indian tax rules — True or False!</p>
         </div>
         <div class="user-stats">
-            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
-            <span class="stat-pill balance-pill">Rs.<span id="balance-txt">10000.00</span></span>
+            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span> <span class="stat-pill xp-pill"><span id="xp-txt">0 XP</span></span> <span class="stat-pill balance-pill">₹<span id="balance-txt">0.00</span></span>
         </div>
     </header>
 
@@ -631,6 +630,133 @@
     });
 
     initScenarioModule('TAX');
+</script>
+
+<!-- ── TAX CHATBOT ─────────────────────────────────────────────────────────── -->
+<div id="tax-chat-overlay" style="
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 8000; display: none; align-items: flex-end; justify-content: flex-end;
+    padding: 1.5rem;">
+    <div style="
+        width: 100%; max-width: 440px;
+        background: #fff; border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        display: flex; flex-direction: column;
+        max-height: 85vh; overflow: hidden;
+        animation: chatIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">
+
+        <!-- Chat header -->
+        <div style="background: linear-gradient(135deg,#1e3a8a,#3b82f6); padding: 1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="color:#fff; font-weight:800; font-size:1.05rem;">Tax Assistant</div>
+                <div style="color:rgba(255,255,255,0.7); font-size:0.78rem; margin-top:2px;">Ask anything about Indian taxes</div>
+            </div>
+            <button onclick="closeTaxChat()" style="background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:50%; width:34px; height:34px; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+        </div>
+
+        <!-- Messages area -->
+        <div id="chat-messages" style="flex:1; overflow-y:auto; padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem; min-height: 200px;">
+            <div style="text-align:center; font-size:0.78rem; color:#9ca3af; padding:0.5rem;">
+                Ask me anything about income tax, deductions, ITR filing, and more.
+            </div>
+            <div style="background:#f0f9ff; border-radius:12px 12px 12px 0; padding:0.85rem 1rem; font-size:0.88rem; line-height:1.6; color:#0c4a6e; max-width:90%;">
+                Hi! I'm your Tax Assistant. Try asking:<br>
+                &bull; "What is Section 80C?"<br>
+                &bull; "How much tax do I pay on ₹8L salary?"<br>
+                &bull; "Old regime vs new regime — which is better?"
+            </div>
+        </div>
+
+        <!-- Input row -->
+        <div style="padding:1rem 1.25rem; border-top:1px solid #e5e7eb; display:flex; gap:0.6rem;">
+            <input type="text" id="chat-input"
+                   placeholder="Type your tax question..."
+                   style="flex:1; border:1px solid #d1d5db; border-radius:999px; padding:0.7rem 1rem; font-size:0.88rem; outline:none;"
+                   onkeydown="if(event.key==='Enter') sendTaxChat()">
+            <button onclick="sendTaxChat()" style="background:#1e3a8a; color:#fff; border:none; border-radius:999px; padding:0.7rem 1.1rem; font-size:0.88rem; font-weight:700; cursor:pointer;">Ask</button>
+        </div>
+    </div>
+</div>
+
+<!-- Floating chat button -->
+<button onclick="openTaxChat()" id="chat-fab" style="
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: linear-gradient(135deg,#1e3a8a,#3b82f6);
+    color: #fff; border: none; border-radius: 999px;
+    padding: 0.85rem 1.5rem; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; z-index: 7999;
+    box-shadow: 0 8px 24px rgba(30,58,138,0.35);
+    display: flex; align-items: center; gap: 0.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;">
+    Ask Tax AI
+</button>
+
+<style>
+@keyframes chatIn {
+    from { opacity:0; transform: translateY(30px) scale(0.9); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+}
+</style>
+
+<script>
+function openTaxChat() {
+    const overlay = document.getElementById('tax-chat-overlay');
+    overlay.style.display = 'flex';
+    document.getElementById('chat-input').focus();
+}
+function closeTaxChat() {
+    document.getElementById('tax-chat-overlay').style.display = 'none';
+}
+document.getElementById('tax-chat-overlay').addEventListener('click', function(e){
+    if(e.target === this) closeTaxChat();
+});
+
+function _addMsg(text, isUser) {
+    const box = document.getElementById('chat-messages');
+    const msg = document.createElement('div');
+    msg.style.cssText = isUser
+        ? 'background:#1e3a8a; color:#fff; border-radius:12px 12px 0 12px; padding:0.75rem 1rem; font-size:0.88rem; line-height:1.6; max-width:90%; align-self:flex-end; white-space:pre-wrap;'
+        : 'background:#f0f9ff; border-radius:12px 12px 12px 0; padding:0.85rem 1rem; font-size:0.88rem; line-height:1.6; color:#0c4a6e; max-width:90%; white-space:pre-wrap;';
+    msg.innerText = text;
+    box.appendChild(msg);
+    box.scrollTop = box.scrollHeight;
+}
+
+function _addTyping() {
+    const box = document.getElementById('chat-messages');
+    const el = document.createElement('div');
+    el.id = 'typing-indicator';
+    el.style.cssText = 'background:#f0f9ff; border-radius:12px 12px 12px 0; padding:0.75rem 1rem; font-size:0.88rem; color:#9ca3af; max-width:90%;';
+    el.innerText = 'Thinking...';
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+}
+
+async function sendTaxChat() {
+    const input = document.getElementById('chat-input');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+
+    _addMsg(q, true);
+    _addTyping();
+
+    try {
+        const res = await fetch(`${API_BASE}/tax/chat/`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ question: q })
+        });
+        const data = await res.json();
+        const typing = document.getElementById('typing-indicator');
+        if (typing) typing.remove();
+        _addMsg(data.answer || 'Sorry, I could not find an answer. Try rephrasing.', false);
+    } catch(e) {
+        const typing = document.getElementById('typing-indicator');
+        if (typing) typing.remove();
+        _addMsg('Could not connect. Make sure the server is running.', false);
+    }
+}
 </script>
 </body>
 </html>

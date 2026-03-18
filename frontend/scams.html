@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -64,6 +64,45 @@
 
         .tip-strip { background: #fefce8; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: 0.75rem 1rem; font-size: 0.82rem; color: #92400e; margin-bottom: 1rem; }
         @media (max-width: 900px) { .module-grid { grid-template-columns: 1fr; } }
+
+        /* ── Mode Toggle ──────────────────────────────────── */
+        .mode-bar {
+            display: flex; gap: 0.5rem; align-items: center;
+            background: var(--surface); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 0.5rem; margin-bottom: 1rem;
+        }
+        .mode-btn {
+            flex: 1; padding: 0.55rem 0.75rem; border: none; border-radius: 8px;
+            font-size: 0.82rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; background: transparent; color: var(--text-secondary);
+        }
+        .mode-btn.active { background: #1e3a8a; color: #fff; }
+
+        /* ── Open-ended text input ─────────────────────────── */
+        .text-answer-zone {
+            display: none; margin-top: 1rem;
+        }
+        .text-prompt {
+            font-size: 0.85rem; color: var(--text-secondary);
+            margin-bottom: 0.6rem; font-style: italic;
+        }
+        .text-answer-input {
+            width: 100%; min-height: 80px; padding: 0.85rem 1rem;
+            border: 2px solid var(--border-color); border-radius: 12px;
+            font-size: 0.95rem; resize: vertical; color: var(--text-primary);
+            outline: none; transition: border-color 0.2s; font-family: inherit;
+        }
+        .text-answer-input:focus { border-color: #1e3a8a; }
+        .text-submit-btn {
+            margin-top: 0.75rem; width: 100%;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: #fff; border: none; border-radius: 10px;
+            padding: 0.85rem; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .text-submit-btn:hover { filter: brightness(1.1); }
+        .text-submit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        .text-hint { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.4rem; }
     </style>
 </head>
 <body class="dashboard-layout">
@@ -103,8 +142,7 @@
             <p class="text-secondary text-sm">Review the message and decide whether to decline or pay.</p>
         </div>
         <div class="user-stats">
-            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
-            <span class="stat-pill balance-pill">Rs.<span id="balance-txt">10000.00</span></span>
+            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span> <span class="stat-pill xp-pill"><span id="xp-txt">0 XP</span></span> <span class="stat-pill balance-pill">₹<span id="balance-txt">0.00</span></span>
         </div>
     </header>
 
@@ -115,6 +153,12 @@
     <div class="module-grid">
         <!-- Left Column -->
         <div>
+            <!-- Mode toggle -->
+            <div class="mode-bar">
+                <button class="mode-btn active" id="mode-btn-click" onclick="setMode('click')">🔘 Quick Answer Mode</button>
+                <button class="mode-btn" id="mode-btn-text" onclick="setMode('text')">✏️ Open Answer Mode</button>
+            </div>
+
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                 <div>
                     <span id="sc-badge" style="display:inline-block; padding:0.2rem 0.7rem; border-radius:999px; font-size:0.72rem; font-weight:700; text-transform:uppercase;">Scenario</span>
@@ -132,7 +176,35 @@
                     <div class="phone-statusbar">
                         <span>9:41</span><span>Finova 5G</span><span>100%</span>
                     </div>
-                    <div id="phone-content" style="min-height: 250px;"></div>
+                    <div id="phone-content" style="min-height: 250px; overflow-y:auto; padding-bottom:1rem;"></div>
+                    <!-- Interactive Text Box inside phone -->
+                    <div class="text-answer-zone" id="text-answer-zone" style="
+                        background:#fff; border-top:1px solid #e5e7eb; padding:0.75rem;
+                        display:none; flex-direction:column; gap:0.5rem;
+                        border-radius: 0 0 1.25rem 1.25rem;
+                    ">
+                        <div style="font-size:0.8rem; font-weight:700; color:#1e3a8a; margin-bottom:0.25rem;">
+                            What happened? Explain why it is right or wrong:
+                        </div>
+                        <textarea class="text-answer-input" id="text-answer-input"
+                            placeholder="e.g. This is wrong because..."
+                            style="
+                                border:none; border-radius:12px; background:#f3f4f6;
+                                padding:0.75rem; font-size:0.85rem; min-height:70px; resize:none;
+                                font-family:inherit; outline:none;
+                            "
+                            onkeydown="if(event.ctrlKey && event.key==='Enter') submitTextAnswer()"></textarea>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 0.25rem;">
+                            <span style="font-size:0.65rem; color:#9ca3af; font-style:italic;">Use keywords: scam, safe, decline, pay...</span>
+                            <button class="text-submit-btn" id="text-submit-btn" onclick="submitTextAnswer()"
+                                style="
+                                    background:#3b82f6; color:#fff; border:none; border-radius:999px;
+                                    padding:0.4rem 1rem; font-size:0.8rem; font-weight:700; cursor:pointer;
+                                    margin-top:0; width:auto;
+                                "
+                            >Send</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="q-progress-wrap">
                     <div class="q-progress-bg">
@@ -141,8 +213,9 @@
                 </div>
             </div>
 
-            <!-- Action buttons container (unified ID) -->
+            <!-- Buttons OR text input depending on mode -->
             <div id="action-zone" class="action-zone"></div>
+
 
             <!-- Explanation Card -->
             <div id="explain-card" class="explain-card">
@@ -209,6 +282,121 @@
 <script>
     authCheck();
     fetchProfile();
+
+    let _upiMode = 'click';   // 'click' or 'text'
+    let _currentScenarioId = null;
+
+    // Patch scenarios.js to capture the current scenario ID
+    const _origRenderScam = window._renderScam;
+    const _origAdvance = window._advance;
+    // After each question loads, scenarios.js sets _item — we access it via a hook
+    document.addEventListener('scenarioLoaded', e => {
+        if (e && e.detail) _currentScenarioId = e.detail.id;
+    });
+
+    function setMode(mode) {
+        _upiMode = mode;
+        document.getElementById('mode-btn-click').className = 'mode-btn' + (mode==='click' ? ' active' : '');
+        document.getElementById('mode-btn-text').className  = 'mode-btn' + (mode==='text'  ? ' active' : '');
+
+        const az = document.getElementById('action-zone');
+        const tz = document.getElementById('text-answer-zone');
+        if (mode === 'click') {
+            az.style.display = 'grid';
+            tz.style.display = 'none';
+        } else {
+            az.style.display = 'none';
+            tz.style.display = 'flex';
+            document.getElementById('text-answer-input').value = '';
+            document.getElementById('text-submit-btn').disabled = false;
+        }
+        // Hide result card when switching modes
+        document.getElementById('explain-card').style.display = 'none';
+    }
+
+    async function submitTextAnswer() {
+        const text = document.getElementById('text-answer-input').value.trim();
+        if (!text || text.length < 5) {
+            alert('Please write at least a short explanation before submitting.');
+            return;
+        }
+
+        // Get current scenario ID from scenarios.js internal state
+        const scenarioId = window._item ? window._item.id : null;
+        if (!scenarioId) { alert('No scenario loaded yet.'); return; }
+
+        const user = localStorage.getItem('finova_user');
+        document.getElementById('text-submit-btn').disabled = true;
+        document.getElementById('text-submit-btn').innerText = 'Evaluating...';
+
+        try {
+            const res = await fetch(`${API_BASE}/scenarios/evaluate-text/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, scenario_id: scenarioId, text: text })
+            });
+            const data = await res.json();
+            document.getElementById('text-submit-btn').innerText = 'Submit My Answer';
+
+            if (data.error && !data.correct && data.correct !== false) {
+                // Needs more words
+                alert(data.error);
+                document.getElementById('text-submit-btn').disabled = false;
+                return;
+            }
+
+            // Show result
+            const card    = document.getElementById('explain-card');
+            const verdict = document.getElementById('explain-verdict');
+            const icon    = document.getElementById('verdict-icon');
+            const change  = document.getElementById('verdict-change');
+            const exText  = document.getElementById('explain-text');
+            const nextBtn = document.getElementById('next-btn');
+
+            if (data.correct) {
+                verdict.className = 'explain-verdict correct';
+                icon.innerText    = '✅ ' + data.message;
+                change.innerText  = '+' + data.xp_reward + ' XP';
+                // Update XP counters
+                document.getElementById('score-xp').innerText =
+                    parseInt(document.getElementById('score-xp').innerText || 0) + (data.xp_reward || 0);
+                document.getElementById('score-correct').innerText =
+                    parseInt(document.getElementById('score-correct').innerText || 0) + 1;
+            } else {
+                verdict.className = 'explain-verdict wrong';
+                icon.innerText    = '❌ ' + data.message;
+                change.innerText  = data.penalty ? '-Rs.' + data.penalty : '';
+                document.getElementById('score-wrong').innerText =
+                    parseInt(document.getElementById('score-wrong').innerText || 0) + 1;
+            }
+
+            exText.innerText = data.explanation || '';
+            nextBtn.innerText = 'Next Scenario';
+            nextBtn.onclick = () => {
+                card.style.display = 'none';
+                document.getElementById('text-answer-input').value = '';
+                document.getElementById('text-submit-btn').disabled = false;
+                window._advance();
+                // Re-hide action-zone since we are in text mode
+                setTimeout(() => setMode('text'), 50);
+            };
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            // Refresh balance/XP in topbar
+            if (data.balance !== undefined) {
+                const bl = document.getElementById('balance-txt');
+                if (bl) bl.innerText = parseFloat(data.balance).toFixed(2);
+            }
+
+        } catch(e) {
+            document.getElementById('text-submit-btn').disabled = false;
+            document.getElementById('text-submit-btn').innerText = 'Submit My Answer';
+            alert('Network error — is Django running?');
+            console.error(e);
+        }
+    }
+
     initScenarioModule('SCAM');
 </script>
 </body>

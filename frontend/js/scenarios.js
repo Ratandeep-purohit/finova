@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 //  scenarios.js  –  Shared engine for UPI Safety + Tax pages
 // ============================================================
 // Element IDs required by host pages:
@@ -58,6 +58,7 @@ function _advance() {
     _idx++;
     if (_idx >= _all.length) { _all = _shuffle(_all); _idx = 0; }
     _item = _all[_idx];
+    window._item = _item;  // expose for host pages
 
     // Reset UI
     _hide('explain-card');
