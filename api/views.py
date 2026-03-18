@@ -325,7 +325,7 @@ def convert_xp(request):
         return Response({
             'message': f'Converted {xp_to_use} XP → Rs.{money_gained}',
             'xp':      profile.xp,
-            'balance': round(float(profile.balance), 2),
+            'balance': float(profile.balance),
             'level':   profile.level,
         })
     except UserProfile.DoesNotExist:
@@ -349,8 +349,8 @@ def get_leaderboard(request):
             'username':  p.user.username,
             'level':     p.level,
             'xp':        p.xp,
-            'balance':   round(float(p.balance), 2),
-            'net_worth': round(net_worth, 2),
+            'balance':   float(p.balance),
+            'net_worth': float(net_worth),
         })
     return Response(result)
 
@@ -360,7 +360,7 @@ def get_stocks(request):
     for stock in Stock.objects.all():
         change_pct = random.uniform(float(-stock.volatility), float(stock.volatility))
         change_amount = float(stock.current_price) * (change_pct / 100.0)
-        stock.current_price = max(Decimal('1.00'), stock.current_price + Decimal(str(round(change_amount, 2))))
+        stock.current_price = max(Decimal('1.00'), stock.current_price + Decimal(f"{change_amount:.2f}"))
         stock.save()
 
     stocks = Stock.objects.all()
