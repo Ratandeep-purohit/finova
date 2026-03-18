@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finova - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="dashboard-layout">
+    
+    <aside class="sidebar">
+        <div class="logo">Finova.</div>
+        <nav>
+            <ul>
+                <li><a href="/dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="/stock_market.html">Stock Market</a></li>
+                <li><a href="/scams.html">Scam Simulator</a></li>
+                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 2rem;">Logout</button></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <h2>Dashboard</h2>
+            <div class="user-stats">
+                <div class="stat-pill"><span id="level-txt">Lvl 1</span></div>
+                <div class="stat-pill xp-pill"><span id="xp-txt">0 XP</span></div>
+                <div class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></div>
+            </div>
+        </header>
+
+        <section class="overview">
+            <div class="card welcome-card">
+                <h3>Welcome back, <span id="username-display">Hustler</span></h3>
+                <p>You have <span class="highlight" id="balance-big">₹10000.00</span> to your name. Don't lose it all in one place!</p>
+            </div>
+        </section>
+
+        <section class="missions">
+            <h3>Today's Missions</h3>
+            <div class="grid">
+                <div class="card md-card">
+                    <h4>First Trade</h4>
+                    <p>Head to the Stock Market and buy your first share.</p>
+                    <a href="/stock_market.html" class="btn btn-primary">Go to Market</a>
+                </div>
+                <div class="card md-card">
+                    <h4>Stay Safe</h4>
+                    <p>Complete 1 scam scenario without getting robbed.</p>
+                    <a href="/scams.html" class="btn btn-primary">Try Scenario</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script>
+        // Init fetch
+        authCheck();
+        fetchProfile();
+    </script>
+</body>
+</html>

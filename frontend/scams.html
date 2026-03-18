@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finova - Scam Simulator</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="dashboard-layout">
+    
+    <aside class="sidebar">
+        <div class="logo">Finova.</div>
+        <nav>
+            <ul>
+                <li><a href="/dashboard.html">Dashboard</a></li>
+                <li><a href="/stock_market.html">Stock Market</a></li>
+                <li><a href="/scams.html" class="active">Scam Simulator</a></li>
+                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 2rem;">Logout</button></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <h2>Scam Simulator</h2>
+            <div class="user-stats">
+                <div class="stat-pill"><span id="level-txt">Lvl 1</span></div>
+                <div class="stat-pill xp-pill"><span id="xp-txt">0 XP</span></div>
+                <div class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></div>
+            </div>
+        </header>
+
+        <section class="center-content" style="min-height: 60vh; font-family: var(--font-fam);">
+            <div class="card" id="scenario-card" style="width: 100%; max-width: 500px; text-align: center;">
+                <h3 id="sc-type" class="text-secondary" style="font-size: 0.9rem; text-transform: uppercase;">Loading...</h3>
+                <h2 id="sc-title" style="margin: 1rem 0;">Loading Scenario...</h2>
+                <p id="sc-desc" style="margin-bottom: 2rem; color: var(--text-primary);"></p>
+                
+                <div id="sc-actions" style="display: flex; gap: 1rem; justify-content: center;">
+                    <!-- populated by js -->
+                </div>
+                
+                <div id="sc-result" style="margin-top: 1.5rem; font-weight: 600;"></div>
+                <button class="btn btn-outline w-100" id="next-btn" style="margin-top: 1rem; display: none;" onclick="loadScenario()">Next Scenario</button>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/scams.js"></script>
+    <script>
+        authCheck();
+        fetchProfile();
+        loadScenario();
+    </script>
+</body>
+</html>
