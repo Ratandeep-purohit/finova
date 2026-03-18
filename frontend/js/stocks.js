@@ -1,121 +1,130 @@
-const API_BASE = "/api/v1";
-let currentUser = localStorage.getItem("finova_user");
 let oldPrices = {};
+let sessionTrades = 0;
+let sessionPnL = 0;
 
+// ── Fetch & render stocks ──────────────────────────────────────────────────
 async function fetchStocks() {
     try {
         let res = await fetch(`${API_BASE}/stocks/`);
-        if (res.ok) {
-            let data = await res.json();
-            renderStocks(data);
-        }
-    } catch(e) {
-        console.error("Error fetching stocks");
-    }
-}
-
-async function fetchPortfolio() {
-    try {
-        let res = await fetch(`${API_BASE}/stocks/portfolio/?username=${currentUser}`);
-        if(res.ok) {
-            let data = await res.json();
-            renderPortfolio(data);
-        }
-    } catch(e) {
-        console.error("Portfolio error");
-    }
+        if (res.ok) renderStocks(await res.json());
+    } catch (e) { console.error("Market fetch error", e); }
 }
 
 function renderStocks(stocks) {
     let html = "";
     stocks.forEach(st => {
-        let oldPrice = oldPrices[st.symbol] || st.current_price;
-        let diff = st.current_price - oldPrice;
-        let pClass = diff >= 0 ? "text-success" : "text-danger";
-        let arrow = diff >= 0 ? "↑" : "↓";
-        if (diff === 0) { arrow = "—"; pClass = "text-secondary"; }
+        const price    = parseFloat(st.current_price);
+        const old      = oldPrices[st.symbol] ?? price;
+        const diff     = price - old;
+        const pClass   = diff > 0 ? "badge-up" : diff < 0 ? "badge-dn" : "badge-neu";
+        const arrow    = diff > 0 ? "▲" : diff < 0 ? "▼" : "—";
+        const pct      = old !== 0 ? ((diff / old) * 100).toFixed(2) : "0.00";
+        oldPrices[st.symbol] = price;
 
         html += `
-            <tr>
-                <td style="font-weight: 600;">${st.symbol}</td>
-                <td class="text-secondary">${st.name}</td>
-                <td class="${pClass}">₹${parseFloat(st.current_price).toFixed(2)} <span class="text-xs">${arrow}</span></td>
-                <td>
-                    <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="tradeStock(${st.id}, 10, 'buy')">Buy 10</button>
-                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.5rem;" onclick="tradeStock(${st.id}, 10, 'sell')">Sell 10</button>
-                </td>
-            </tr>
-        `;
-        oldPrices[st.symbol] = st.current_price;
+        <div class="stock-card">
+            <div>
+                <span style="font-weight:700;">${st.symbol}</span>
+                <span class="text-secondary text-sm" style="margin-left:0.5rem;">${st.name}</span><br>
+                <span style="font-weight:600; font-size:1rem;">₹${price.toFixed(2)}</span>
+                <span class="${pClass}" style="margin-left:0.5rem;">${arrow} ${Math.abs(pct)}%</span>
+            </div>
+            <div class="stock-actions">
+                <input class="qty-input" type="number" id="qty-${st.id}" value="10" min="1" max="500">
+                <button class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.8rem;" onclick="trade(${st.id},'buy')">Buy</button>
+                <button class="btn btn-outline"  style="padding:0.35rem 0.75rem; font-size:0.8rem;" onclick="trade(${st.id},'sell')">Sell</button>
+            </div>
+        </div>`;
     });
     document.getElementById("stock-list").innerHTML = html;
 }
 
-function renderPortfolio(portfolio) {
-    let html = "";
-    if(portfolio.length === 0) {
-        html = '<p class="text-secondary text-center">You don\'t own any stocks yet.</p>';
-    } else {
-        html = `<ul style="list-style: none; padding: 0;">`;
-        portfolio.forEach(p => {
-            let pr_c = parseFloat(p.current_price);
-            let pr_avg = parseFloat(p.average_buy_price);
-            let profit = (pr_c - pr_avg) * p.quantity;
-            let pClass = profit >= 0 ? "text-success" : "text-danger";
-            
-            html += `
-                <li style="margin-bottom: 0.5rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
-                    <div class="flex justify-between items-center mb-1">
-                        <strong class="font-bold">${p.symbol}</strong>
-                        <span class="text-secondary text-sm">${p.quantity} shares</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm mt-2">
-                        <span class="text-secondary">Avg: ₹${pr_avg.toFixed(2)} | Current: ₹${pr_c.toFixed(2)}</span>
-                        <span class="${pClass} font-bold">${profit >= 0 ? '+' : '-'}₹${Math.abs(profit).toFixed(2)} PnL</span>
-                    </div>
-                </li>
-            `;
-        });
-        html += `</ul>`;
-    }
-    document.getElementById("portfolio-list").innerHTML = html;
+// ── Fetch & render portfolio ───────────────────────────────────────────────
+async function fetchPortfolio() {
+    try {
+        let res = await fetch(`${API_BASE}/stocks/portfolio/?username=${currentUser}`);
+        if (res.ok) renderPortfolio(await res.json());
+    } catch (e) { console.error("Portfolio fetch error", e); }
 }
 
-async function tradeStock(id, qty, action) {
-    let msgObj = document.getElementById("market-msg");
-    let errObj = document.getElementById("market-err");
-    msgObj.innerText = ""; msgObj.className = "text-center font-medium mb-4 text-success";
-    errObj.innerText = ""; errObj.className = "text-center font-medium mb-4 text-danger";
-    
-    let ep = action === 'buy' ? 'buy/' : 'sell/';
+function renderPortfolio(portfolio) {
+    const el = document.getElementById("portfolio-list");
+    if (!portfolio.length) {
+        el.innerHTML = '<p class="text-secondary text-center" style="padding:2rem;">You don\'t own any stocks yet.</p>';
+        return;
+    }
+    let html = "";
+    portfolio.forEach(p => {
+        const cur  = parseFloat(p.current_price);
+        const avg  = parseFloat(p.average_buy_price);
+        const pnl  = (cur - avg) * p.quantity;
+        const cls  = pnl >= 0 ? "text-success" : "text-danger";
+        const sign = pnl >= 0 ? "+" : "";
+        html += `
+        <div class="portfolio-item">
+            <div>
+                <strong>${p.symbol}</strong>
+                <span class="text-secondary text-sm" style="margin-left:0.5rem;">${p.quantity} shares</span><br>
+                <span class="text-secondary text-sm">Avg ₹${avg.toFixed(2)} · Now ₹${cur.toFixed(2)}</span>
+            </div>
+            <span class="${cls} font-bold text-sm">${sign}₹${pnl.toFixed(2)}</span>
+        </div>`;
+    });
+    el.innerHTML = html;
+}
+
+// ── Trade ─────────────────────────────────────────────────────────────────
+async function trade(stockId, action) {
+    const qtyEl = document.getElementById(`qty-${stockId}`);
+    const qty   = parseInt(qtyEl ? qtyEl.value : 10);
+    if (!qty || qty < 1) { showToast("Enter a valid quantity.", "error"); return; }
+
+    const ep = action === 'buy' ? 'buy/' : 'sell/';
     try {
         let res = await fetch(`${API_BASE}/stocks/${ep}`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: currentUser, stock_id: id, quantity: qty})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser, stock_id: stockId, quantity: qty })
         });
         let data = await res.json();
-        if(res.ok) {
-            msgObj.innerText = data.message;
-            if(data.profit !== undefined) {
-                msgObj.innerText += ` | Net: ₹${parseFloat(data.profit).toFixed(2)}`;
-                msgObj.className = parseFloat(data.profit) >= 0 ? "text-center font-medium mb-4 text-success" : "text-center font-medium mb-4 text-danger";
+        if (res.ok) {
+            sessionTrades++;
+            let toastMsg = data.message;
+            if (data.profit !== undefined) {
+                const pnl = parseFloat(data.profit);
+                sessionPnL += pnl;
+                const sign = pnl >= 0 ? "+" : "";
+                toastMsg += `  ·  P&L: ${sign}₹${pnl.toFixed(2)}`;
+                document.getElementById("stat-pnl").innerText = `${sessionPnL >= 0 ? '+' : ''}₹${sessionPnL.toFixed(2)}`;
+                document.getElementById("stat-pnl").style.color = sessionPnL >= 0 ? "var(--success)" : "var(--danger)";
             }
-            fetchProfile(); // update balance on top
+            document.getElementById("stat-trades").innerText = sessionTrades;
+            showToast(toastMsg, "success");
+            fetchProfile();
             fetchPortfolio();
         } else {
-            errObj.innerText = data.error;
+            showToast(data.error || "Transaction failed.", "error");
         }
-    } catch(e) {
-        errObj.innerText = "Transaction failed!";
+    } catch (e) {
+        showToast("Could not reach the server.", "error");
     }
 }
 
+// ── Toast notification ─────────────────────────────────────────────────────
+function showToast(msg, type = "success") {
+    const old = document.getElementById("toast-el");
+    if (old) old.remove();
+    const t = document.createElement("div");
+    t.id = "toast-el";
+    t.className = `toast ${type}`;
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
 function initStocks() {
     fetchStocks();
     fetchPortfolio();
-    setInterval(() => {
-        fetchStocks();
-        fetchPortfolio();
-    }, 5000); // 5 sec update
+    setInterval(() => { fetchStocks(); fetchPortfolio(); }, 5000);
 }

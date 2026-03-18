@@ -9,6 +9,7 @@ urlpatterns = [
     # Frontend Views
     path('', TemplateView.as_view(template_name='index.html'), name='home'),
     path('index.html', TemplateView.as_view(template_name='index.html')),
+    path('register.html', TemplateView.as_view(template_name='register.html')),
     path('dashboard.html', TemplateView.as_view(template_name='dashboard.html')),
     path('stock_market.html', TemplateView.as_view(template_name='stock_market.html')),
     path('scams.html', TemplateView.as_view(template_name='scams.html')),

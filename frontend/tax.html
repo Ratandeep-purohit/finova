@@ -1,75 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finova - Tax Challenge</title>
+    <title>Finova – Tax Challenge</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .module-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
+        
+        /* ── Document Card ───────────────────────────────────────── */
+        .doc-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+        .doc-header { background: #1e3a8a; color: #fff; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; }
+        .doc-header-left h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .doc-header-left p  { font-size: 0.75rem; opacity: 0.7; }
+        .doc-stamp { border: 2px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+        
+        .doc-progress-strip { background: #1e40af; height: 4px; }
+        .doc-progress-fill  { height: 100%; background: #60a5fa; transition: width 0.4s; }
+        
+        .doc-cat-banner { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1.5rem; background: #f0f9ff; border-bottom: 1px solid #bae6fd; font-size: 0.82rem; }
+        .cat-icon { font-size: 1.5rem; }
+        .cat-label { font-weight: 700; color: #0c4a6e; font-size: 0.8rem; }
+        
+        .doc-body { padding: 1.5rem; }
+        .doc-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-primary); }
+        .doc-question { font-size: 0.9rem; line-height: 1.75; color: var(--text-primary); background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--border-color); border-left: 4px solid #1e3a8a; padding: 1rem 1.25rem; }
+
+        /* ── Actions ─────────────────────────────────────────────── */
+        .action-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+        .choice-btn { padding: 0.85rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
+        .choice-safe  { background: #1e3a8a; color: #fff; border: none; }
+        .choice-safe:hover  { filter: brightness(1.15); transform: translateY(-1px); }
+        .choice-risky { background: #fef2f2; color: #991b1b; border: 2px solid #fca5a5; }
+        .choice-risky:hover { background: #fee2e2; transform: translateY(-1px); }
+
+        /* ── Explanation Flip Card ────────────────────────────────── */
+        .explain-card { display: none; margin-top: 1.25rem; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-color); animation: slideDown 0.35s ease; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+        
+        .explain-verdict { padding: 1.25rem 1.5rem; font-size: 1.1rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .explain-verdict.correct { background: #166534; color: #fff; }
+        .explain-verdict.wrong   { background: #991b1b; color: #fff; }
+        
+        .verdict-change { font-size: 0.85rem; padding: 0.2rem 0.6rem; background: rgba(255,255,255,0.2); border-radius: 999px; }
+        .explain-body { background: #fff; padding: 1.25rem 1.5rem; }
+        .explain-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 0.4rem; }
+        .explain-text { font-size: 0.875rem; line-height: 1.7; color: var(--text-primary); }
+
+        /* ── Component utils ─────────────────────────────────────── */
+        .xp-flash { display: none; padding: 0.4rem 0.9rem; border-radius: 999px; font-weight: 700; font-size: 0.85rem; animation: popIn 0.4s cubic-bezier(.175,.885,.32,1.275); }
+        .xp-flash.gain { background: #dcfce7; color: #166534; }
+        .xp-flash.loss { background: #fee2e2; color: #991b1b; }
+        @keyframes popIn { 0%{transform:scale(0.6);opacity:0} 100%{transform:scale(1);opacity:1} }
+
+        .streak-badge { background: #f59e0b; color: #fff; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; margin-left: 0.5rem; display: none; }
+
+        .right-panel { display: flex; flex-direction: column; gap: 1rem; }
+        .info-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; }
+        .score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; }
+        .score-box  { text-align:center; padding:0.75rem; background:var(--bg-color); border-radius:var(--radius-sm); }
+        .score-val  { font-size:1.4rem; font-weight:700; }
+        .xp-bar-bg { height: 8px; background: var(--bg-color); border-radius: 4px; margin-top: 0.4rem; }
+        .xp-bar-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease; }
+
+        .tax-bracket { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 0.4rem; }
+        .bracket-range { font-weight: 700; flex: 1; color: var(--text-primary); }
+        .bracket-rate  { background: #1e3a8a; color: #fff; border-radius: 4px; padding: 0.15rem 0.5rem; font-size: 0.72rem; font-weight: 700; }
+
+        @media (max-width: 900px) { .module-grid { grid-template-columns:1fr; } }
+    </style>
 </head>
-
 <body class="dashboard-layout">
+<aside class="sidebar">
+    <h1 class="logo" style="color:#fff;">Finova.</h1>
+    <nav>
+        <div class="nav-label">Menu</div>
+        <ul>
+            <li><a href="/dashboard.html">Dashboard</a></li>
+            <li><a href="/leaderboard.html">Leaderboard</a></li>
+        </ul>
+        <div class="nav-label">Modules</div>
+        <ul>
+            <li><a href="/stock_market.html">Stock Market</a></li>
+            <li><a href="/scams.html">UPI Safety</a></li>
+            <li><a href="/tax.html" class="active">Tax Challenge</a></li>
+        </ul>
+        <div class="nav-label">Account</div>
+        <ul>
+            <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top:0.5rem;">Logout</button></li>
+        </ul>
+    </nav>
+</aside>
 
-    <aside class="sidebar">
-        <h1 class="logo" style="color: var(--primary);">Finova.</h1>
-        <nav>
-            <div class="nav-label">Menu</div>
-            <ul>
-                <li><a href="/dashboard.html">Dashboard</a></li>
-                <li><a href="/leaderboard.html">Leaderboard</a></li>
-            </ul>
-            <div class="nav-label">Modules</div>
-            <ul>
-                <li><a href="/stock_market.html">Stock Market</a></li>
-                <li><a href="/scams.html">UPI Safety</a></li>
-                <li><a href="/tax.html" class="active">Tax Challenge</a></li>
-            </ul>
-            <div class="nav-label">Account</div>
-            <ul>
-                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 0.5rem;">Logout</button>
-                </li>
-            </ul>
-        </nav>
-    </aside>
+<main class="content">
+    <header class="topbar">
+        <div>
+            <h2>Tax Challenge</h2>
+            <p class="text-secondary text-sm">Review real Indian tax laws and choose Yes or No.</p>
+        </div>
+        <div class="user-stats">
+            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
+            <span class="stat-pill balance-pill">Rs.<span id="balance-txt">10000.00</span></span>
+        </div>
+    </header>
 
-    <main class="content">
-        <header class="topbar">
-            <div>
-                <h2>Tax Challenge</h2>
-                <p class="text-secondary text-sm">Learn how to declare income and understand tax basics.</p>
+    <div class="module-grid">
+        <!-- Left: Document card -->
+        <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <span id="streak-badge" class="streak-badge">3 streak!</span>
+                <span id="q-counter" class="text-secondary text-sm">Loading...</span>
+                <span class="xp-flash" id="xp-flash"></span>
             </div>
-            <div class="user-stats">
-                <span class="stat-pill xp-pill"> <span id="level-txt">1</span></span>
-                <span class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></span>
-            </div>
-        </header>
 
-        <section class="center-content p-0" style="min-height: 40vh;">
-            <div class="card" id="scenario-card" style="width: 100%; max-width: 500px; text-align: center;">
-                <h3 id="sc-type" class="text-sm text-secondary font-bold mb-2">Loading...</h3>
-                <h2 id="sc-title" class="text-xl mb-4 text-primary-color">Loading Scenario...</h2>
-                <p id="sc-desc" class="mb-6 mt-4"></p>
-
-                <div id="sc-actions" class="flex gap-4 justify-between w-100">
-                    <!-- populated by js -->
+            <div class="doc-card">
+                <div class="doc-header">
+                    <div class="doc-header-left">
+                        <h3 id="sc-title">Loading tax scenario...</h3>
+                        <p>Government of India — Income Tax / Finance Act</p>
+                    </div>
+                    <div class="doc-stamp" id="doc-stamp">Section</div>
                 </div>
-
-                <div id="sc-result" style="display: none; text-align: left;"></div>
-                <button class="btn btn-outline w-100 mt-4" id="next-btn" style="display: none;"
-                    onclick="loadScenario('TAX')">Next Challenge</button>
+                <!-- Progress strip -->
+                <div class="doc-progress-strip">
+                    <div class="doc-progress-fill" id="q-progress" style="width:0%"></div>
+                </div>
+                <!-- Category banner -->
+                <div class="doc-cat-banner">
+                    <div class="cat-icon" id="cat-icon">📄</div>
+                    <div>
+                        <div class="cat-label" id="cat-label">Tax Topic</div>
+                        <div class="text-secondary text-sm">Read carefully and answer Yes or No</div>
+                    </div>
+                </div>
+                <!-- Body -->
+                <div class="doc-body">
+                    <div class="doc-question" id="sc-desc">Please wait while questions load.</div>
+                    
+                    <!-- Action buttons container -->
+                    <div id="action-zone" class="action-zone"></div>
+                </div>
             </div>
-        </section>
 
-    </main>
+            <!-- Explanation Card -->
+            <div id="explain-card" class="explain-card">
+                <div class="explain-verdict" id="explain-verdict">
+                    <span id="verdict-icon">Correct!</span>
+                    <span class="verdict-change" id="verdict-change"></span>
+                </div>
+                <div class="explain-body">
+                    <div class="explain-label">Tax Rule Applied</div>
+                    <div class="explain-text" id="explain-text"></div>
+                    <button id="next-btn" class="btn btn-primary" style="margin-top:1.5rem; width:100%;">Next Question</button>
+                </div>
+            </div>
+        </div>
 
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/dashboard.js"></script>
-    <script src="/static/js/scenarios.js"></script>
-    <script>
-        authCheck();
-        fetchProfile();
-        loadScenario('TAX');
-    </script>
+        <!-- Right panel -->
+        <div class="right-panel">
+            <div class="info-card">
+                <h3 style="margin-bottom:1rem;">Session Score</h3>
+                <div class="score-grid">
+                    <div class="score-box">
+                        <div class="score-val text-success" id="score-correct">0</div>
+                        <div class="text-secondary text-sm">Correct</div>
+                    </div>
+                    <div class="score-box">
+                        <div class="score-val text-danger" id="score-wrong">0</div>
+                        <div class="text-secondary text-sm">Wrong</div>
+                    </div>
+                    <div class="score-box">
+                        <div class="score-val text-primary-color" id="score-xp">0</div>
+                        <div class="text-secondary text-sm">XP</div>
+                    </div>
+                </div>
+                <div style="margin-top:1rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                        <span class="text-secondary">Accuracy</span>
+                        <span id="accuracy-val" class="font-bold">—</span>
+                    </div>
+                    <div class="xp-bar-bg"><div class="xp-bar-fill" id="accuracy-bar" style="width:0%"></div></div>
+                </div>
+            </div>
+
+            <!-- Tax Slabs Quick Reference -->
+            <div class="info-card">
+                <h3 style="margin-bottom:0.75rem;">India Tax Slabs (Old Regime)</h3>
+                <div class="tax-bracket"><span class="bracket-range">Up to Rs.2.5L</span><span class="bracket-rate">0%</span></div>
+                <div class="tax-bracket"><span class="bracket-range">Rs.2.5L – Rs.5L</span><span class="bracket-rate">5%</span></div>
+                <div class="tax-bracket"><span class="bracket-range">Rs.5L – Rs.10L</span><span class="bracket-rate">20%</span></div>
+                <div class="tax-bracket"><span class="bracket-range">Above Rs.10L</span><span class="bracket-rate">30%</span></div>
+            </div>
+
+            <!-- Key Deductions -->
+            <div class="info-card">
+                <h3 style="margin-bottom:0.75rem;">Key Deductions</h3>
+                <div style="font-size:0.8rem; display:flex; flex-direction:column; gap:0.4rem;">
+                    <div style="display:flex; justify-content:space-between;"><span>Section 80C</span><strong>Rs.1.5L</strong></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Section 80CCD(1B)</span><strong>+Rs.50K</strong></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Section 80D</span><strong>Rs.25K</strong></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Standard Deduction</span><strong>Rs.50K</strong></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Home Loan Interest</span><strong>Rs.2L</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script src="/static/js/scenarios.js"></script>
+<script>
+    authCheck();
+    fetchProfile();
+    initScenarioModule('TAX');
+</script>
 </body>
-
 </html>

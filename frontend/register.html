@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finova - Register</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .login-card {
+            border-top: 4px solid var(--primary);
+            max-width: 450px;
+            width: 100%;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body class="center-content">
+    
+    <div class="card login-card">
+        <h1 class="logo justify-center mb-2" style="margin-bottom: 0.5rem; justify-content: center; text-align: center; color: var(--primary);">Finova</h1>
+        <p class="text-center text-secondary mb-6 text-sm">Create your new account to start learning.</p>
+        
+        <div class="form-group">
+            <label class="form-label" for="reg-username">Username <span class="text-danger">*</span></label>
+            <input type="text" id="reg-username" placeholder="Choose a username" required>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label class="form-label" for="reg-password">Password <span class="text-danger">*</span></label>
+                <input type="password" id="reg-password" placeholder="Password" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="reg-confirm">Confirm Password <span class="text-danger">*</span></label>
+                <input type="password" id="reg-confirm" placeholder="Confirm" required>
+            </div>
+        </div>
+
+        <p class="text-xs text-secondary mb-4 p-0">You must provide at least one contact method.</p>
+
+        <div class="form-group">
+            <label class="form-label" for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" placeholder="student@example.com">
+        </div>
+
+        <div class="form-group mb-6">
+            <label class="form-label" for="reg-phone">Phone Number</label>
+            <input type="tel" id="reg-phone" placeholder="e.g. 9876543210">
+        </div>
+        
+        <div id="reg-error" class="text-danger text-center text-sm mb-4"></div>
+        <button class="btn btn-primary w-100" onclick="register()">Create Account</button>
+        
+        <p class="text-xs text-secondary text-center mt-4">
+            Already have an account? <a href="/index.html" class="text-primary-color font-bold">Log in</a>.
+        </p>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+</body>
+</html>

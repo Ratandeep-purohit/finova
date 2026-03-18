@@ -14,14 +14,32 @@ from decimal import Decimal
 def register(request):
     username = request.data.get('username')
     password = request.data.get('password')
+    email = request.data.get('email', '').strip()
+    phone_number = request.data.get('phone_number', '').strip()
+
+    # MySQL treats "" as a unique value. We must use None if empty
+    if not phone_number:
+        phone_number = None
+    if not email:
+        email = None
+    
     if not username or not password:
         return Response({'error': 'Username and password required'}, status=status.HTTP_400_BAD_REQUEST)
     
+    if not email and not phone_number:
+        return Response({'error': 'Email or Phone Number is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
     if User.objects.filter(username=username).exists():
         return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if email and User.objects.filter(email=email).exists():
+        return Response({'error': 'Email is already registered'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if phone_number and UserProfile.objects.filter(phone_number=phone_number).exists():
+        return Response({'error': 'Phone number is already registered'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = User.objects.create_user(username=username, password=password)
-    profile = UserProfile.objects.create(user=user, balance=10000.00)
+    user = User.objects.create_user(username=username, password=password, email=email)
+    profile = UserProfile.objects.create(user=user, phone_number=phone_number, balance=10000.00)
     return Response({'message': 'Registered successfully', 'balance': profile.balance}, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
@@ -47,9 +65,25 @@ def get_profile(request):
     return Response(UserProfileSerializer(profile).data)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_leaderboard(request):
-    profiles = UserProfile.objects.order_by('-xp')[:10]
-    return Response(UserProfileSerializer(profiles, many=True).data)
+    profiles = UserProfile.objects.select_related('user').order_by('-xp', '-balance')
+    result = []
+    for p in profiles:
+        # Calculate portfolio market value so net_worth = cash + holdings
+        portfolio_value = sum(
+            item.stock.current_price * item.quantity
+            for item in Portfolio.objects.filter(user=p).select_related('stock')
+        )
+        net_worth = float(p.balance) + float(portfolio_value)
+        result.append({
+            'username':  p.user.username,
+            'level':     p.level,
+            'xp':        p.xp,
+            'balance':   round(float(p.balance), 2),
+            'net_worth': round(net_worth, 2),
+        })
+    return Response(result)
 
 @api_view(['GET'])
 def get_stocks(request):
@@ -69,87 +103,105 @@ def get_stocks(request):
 def buy_stock(request):
     username = request.data.get('username')
     stock_id = request.data.get('stock_id')
-    quantity = int(request.data.get('quantity', 0))
-    if quantity <= 0:
+    if not username:
+        return Response({'error': 'Not logged in. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
+    try:
+        quantity = int(request.data.get('quantity', 0))
+    except (ValueError, TypeError):
         return Response({'error': 'Invalid quantity'}, status=status.HTTP_400_BAD_REQUEST)
+    if quantity <= 0:
+        return Response({'error': 'Quantity must be at least 1'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         stock = Stock.objects.get(id=stock_id)
-        profile = UserProfile.objects.get(user__username=username)
-        total_cost = stock.current_price * quantity
-        
-        if profile.balance < total_cost:
-            return Response({'error': 'Insufficient funds'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        profile.balance -= total_cost
-        profile.save()
-
-        portfolio, created = Portfolio.objects.get_or_create(user=profile, stock=stock)
-        
-        # Calculate new average buy price
-        old_total = portfolio.average_buy_price * portfolio.quantity
-        portfolio.quantity += quantity
-        portfolio.average_buy_price = (old_total + total_cost) / portfolio.quantity
-        portfolio.save()
-
-        return Response({'message': f'Successfully bought {quantity} {stock.symbol}', 'balance': profile.balance})
     except Stock.DoesNotExist:
         return Response({'error': 'Stock not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        profile = UserProfile.objects.get(user__username=username)
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'User profile not found. Please log in again.'}, status=status.HTTP_404_NOT_FOUND)
+
+    total_cost = stock.current_price * quantity
+    if profile.balance < total_cost:
+        return Response({'error': f'Insufficient funds. Need Rs.{total_cost:.2f}, have Rs.{profile.balance:.2f}'}, status=status.HTTP_400_BAD_REQUEST)
+
+    profile.balance -= total_cost
+    profile.save()
+
+    portfolio, created = Portfolio.objects.get_or_create(user=profile, stock=stock)
+    old_total = portfolio.average_buy_price * portfolio.quantity
+    portfolio.quantity += quantity
+    portfolio.average_buy_price = (old_total + total_cost) / portfolio.quantity
+    portfolio.save()
+
+    return Response({'message': f'Bought {quantity} shares of {stock.symbol}', 'balance': float(profile.balance)})
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def sell_stock(request):
     username = request.data.get('username')
     stock_id = request.data.get('stock_id')
-    quantity = int(request.data.get('quantity', 0))
+    if not username:
+        return Response({'error': 'Not logged in. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
+    try:
+        quantity = int(request.data.get('quantity', 0))
+    except (ValueError, TypeError):
+        return Response({'error': 'Invalid quantity'}, status=status.HTTP_400_BAD_REQUEST)
+    if quantity <= 0:
+        return Response({'error': 'Quantity must be at least 1'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         stock = Stock.objects.get(id=stock_id)
+    except Stock.DoesNotExist:
+        return Response({'error': 'Stock not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
         profile = UserProfile.objects.get(user__username=username)
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'User profile not found. Please log in again.'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
         portfolio = Portfolio.objects.get(user=profile, stock=stock)
+    except Portfolio.DoesNotExist:
+        return Response({'error': f'You do not own any shares of {stock.symbol}'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if portfolio.quantity < quantity:
-            return Response({'error': 'Not enough shares'}, status=status.HTTP_400_BAD_REQUEST)
+    if portfolio.quantity < quantity:
+        return Response({'error': f'You only own {portfolio.quantity} shares of {stock.symbol}'}, status=status.HTTP_400_BAD_REQUEST)
 
-        total_earning = stock.current_price * quantity
-        
-        # Determine profit/loss
-        cost_basis = portfolio.average_buy_price * quantity
-        profit = total_earning - cost_basis
+    total_earning = stock.current_price * quantity
+    cost_basis    = portfolio.average_buy_price * quantity
+    profit        = total_earning - cost_basis
 
-        profile.balance += total_earning
-        
-        # Gamification: Reward XP for profitable trades
-        if profit > 0:
-            profile.xp += 10
-            # Level up logic
-            if profile.xp >= profile.level * 100:
-                profile.level += 1
-                profile.xp -= profile.level * 100
+    profile.balance += total_earning
+    if profit > 0:
+        profile.xp += 10
+        if profile.xp >= profile.level * 100:
+            profile.level += 1
+            profile.xp -= profile.level * 100
+    profile.save()
 
-        profile.save()
+    portfolio.quantity -= quantity
+    if portfolio.quantity == 0:
+        portfolio.delete()
+    else:
+        portfolio.save()
 
-        portfolio.quantity -= quantity
-        if portfolio.quantity == 0:
-            portfolio.delete()
-        else:
-            portfolio.save()
-
-        return Response({
-            'message': f'Successfully sold {quantity} {stock.symbol}',
-            'balance': profile.balance,
-            'profit': profit,
-            'xp': profile.xp
-        })
-
-    except (Stock.DoesNotExist, Portfolio.DoesNotExist):
-        return Response({'error': 'Invalid stock or not owned'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        'message': f'Sold {quantity} shares of {stock.symbol}',
+        'balance': float(profile.balance),
+        'profit':  float(profit),
+        'xp':      profile.xp
+    })
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_portfolio(request):
     username = request.GET.get('username')
-    profile = UserProfile.objects.get(user__username=username)
+    try:
+        profile = UserProfile.objects.get(user__username=username)
+    except UserProfile.DoesNotExist:
+        return Response([], status=status.HTTP_200_OK)
     portfolios = Portfolio.objects.filter(user=profile)
     return Response(PortfolioSerializer(portfolios, many=True).data)
 
@@ -163,37 +215,61 @@ def get_random_scenario(request):
     scenario = random.choice(scenarios)
     return Response(ScenarioSerializer(scenario).data)
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_all_scenarios(request):
+    """Return ALL scenarios of a given type so the frontend can manage the queue."""
+    scenario_type = request.GET.get('type', 'SCAM')
+    scenarios = list(Scenario.objects.filter(type=scenario_type).values(
+        'id', 'type', 'hint_type', 'title', 'description', 'xp_reward', 'penalty', 'explanation'
+    ))
+    if not scenarios:
+        return Response({'error': 'No scenarios found for type: ' + scenario_type}, status=status.HTTP_404_NOT_FOUND)
+    return Response(scenarios)
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def answer_scenario(request):
-    username = request.data.get('username')
+    username    = request.data.get('username')
     scenario_id = request.data.get('scenario_id')
-    action = request.data.get('action') # e.g. 'DECLINE' or 'PAY'
+    action      = request.data.get('action', '')
+
+    if not username:
+        return Response({'error': 'Not logged in'}, status=status.HTTP_401_UNAUTHORIZED)
+    if not action:
+        return Response({'error': 'No action provided'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         scenario = Scenario.objects.get(id=scenario_id)
-        profile = UserProfile.objects.get(user__username=username)
-
-        is_correct = action.upper() == scenario.correct_action.upper()
-        if is_correct:
-            profile.xp += scenario.xp_reward
-            msg = "Correct! You successfully navigated this scenario."
-        else:
-            profile.balance -= scenario.penalty
-            msg = f"Oops! You lost ₹{scenario.penalty}. Lesson learned."
-
-        # simple level up
-        if profile.xp >= profile.level * 100:
-            profile.level += 1
-            profile.xp -= profile.level * 100
-
-        profile.save()
-        return Response({
-            'correct': is_correct,
-            'message': msg,
-            'new_balance': profile.balance,
-            'new_xp': profile.xp
-        })
-
     except Scenario.DoesNotExist:
         return Response({'error': 'Scenario not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        profile = UserProfile.objects.get(user__username=username)
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'User profile not found. Please log in again.'}, status=status.HTTP_404_NOT_FOUND)
+
+    is_correct = action.strip().upper() == scenario.correct_action.strip().upper()
+
+    if is_correct:
+        profile.xp += scenario.xp_reward
+        msg = f'Correct! You answered this {scenario.type} question right.'
+    else:
+        profile.balance -= scenario.penalty
+        msg = f'Wrong answer. You lost Rs.{float(scenario.penalty):.2f} from your balance.'
+
+    if profile.xp >= profile.level * 100:
+        profile.level += 1
+        profile.xp   -= profile.level * 100
+
+    profile.save()
+
+    return Response({
+        'correct':     is_correct,
+        'message':     msg,
+        'new_balance': float(profile.balance),
+        'new_xp':      profile.xp,
+        'new_level':   profile.level,
+        'penalty':     float(scenario.penalty),
+        'xp_reward':   scenario.xp_reward,
+    })

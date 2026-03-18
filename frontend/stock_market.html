@@ -5,88 +5,367 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finova - Stock Market</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* ── Two-column layout ──────────────────────────────────────── */
+        .market-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media (max-width: 860px) { .market-grid { grid-template-columns: 1fr; } }
+
+        /* ── Stock row ──────────────────────────────────────────────── */
+        .stock-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.15s;
+        }
+        .stock-row:last-child  { border-bottom: none; }
+        .stock-row:hover       { background: #f8fafc; }
+
+        .stock-sym   { font-weight: 700; font-size: 0.95rem; }
+        .stock-name  { font-size: 0.78rem; color: var(--text-secondary); margin-top: 1px; }
+        .stock-price { font-weight: 700; font-size: 1rem; }
+
+        .change-up  { color: #16a34a; font-size: 0.78rem; font-weight: 700; }
+        .change-dn  { color: #dc2626; font-size: 0.78rem; font-weight: 700; }
+        .change-neu { color: var(--text-secondary); font-size: 0.78rem; }
+
+        .trade-zone  { display: flex; gap: 0.4rem; align-items: center; }
+        .qty-box {
+            width: 58px; padding: 0.3rem 0.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem; text-align: center;
+            background: #fff;
+        }
+        .qty-box:focus { outline: none; border-color: var(--primary); }
+
+        .btn-buy {
+            padding: 0.3rem 0.7rem; font-size: 0.8rem; font-weight: 700;
+            background: var(--primary); color: #fff;
+            border: none; border-radius: var(--radius-sm);
+            cursor: pointer; transition: filter 0.15s;
+        }
+        .btn-buy:hover  { filter: brightness(1.12); }
+        .btn-sell {
+            padding: 0.3rem 0.7rem; font-size: 0.8rem; font-weight: 700;
+            background: #fef2f2; color: #dc2626;
+            border: 1px solid #fca5a5; border-radius: var(--radius-sm);
+            cursor: pointer; transition: background 0.15s;
+        }
+        .btn-sell:hover { background: #fee2e2; }
+
+        /* ── Live dot ───────────────────────────────────────────────── */
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #16a34a; display: inline-block;
+            margin-right: 5px; animation: blink 2s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.25} }
+
+        /* ── Portfolio ──────────────────────────────────────────────── */
+        .port-row {
+            padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: grid; grid-template-columns: 1fr auto;
+            align-items: center; gap: 0.5rem;
+        }
+        .port-row:last-child { border-bottom: none; }
+        .port-sym  { font-weight: 700; font-size: 0.88rem; }
+        .port-meta { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+        .port-pnl  { font-size: 0.85rem; font-weight: 700; text-align: right; }
+        .pnl-pos   { color: #16a34a; }
+        .pnl-neg   { color: #dc2626; }
+
+        /* ── Toast ──────────────────────────────────────────────────── */
+        #toast-el {
+            position: fixed; bottom: 2rem; right: 2rem;
+            background: #fff; border-radius: var(--radius-md);
+            padding: 0.875rem 1.25rem; max-width: 320px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.14);
+            font-size: 0.875rem; font-weight: 500;
+            z-index: 9999; animation: toastIn 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+        #toast-el.error  { border-color: #dc2626; color: #dc2626; }
+        #toast-el.success{ border-color: #16a34a; color: #16a34a; }
+        @keyframes toastIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+        /* ── Stat pills ─────────────────────────────────────────────── */
+        .stat-box { text-align: center; padding: 0.75rem; background: var(--bg-color); border-radius: var(--radius-sm); }
+        .stat-val { font-size: 1.4rem; font-weight: 700; }
+    </style>
 </head>
 <body class="dashboard-layout">
-    
-    <aside class="sidebar">
-        <h1 class="logo" style="color: var(--primary);">Finova.</h1>
-        <nav>
-            <div class="nav-label">Menu</div>
-            <ul>
-                <li><a href="/dashboard.html">Dashboard</a></li>
-                <li><a href="/leaderboard.html">Leaderboard</a></li>
-            </ul>
-            <div class="nav-label">Modules</div>
-            <ul>
-                <li><a href="/stock_market.html" class="active">Stock Market</a></li>
-                <li><a href="/scams.html">UPI Safety</a></li>
-                <li><a href="/tax.html">Tax Challenge</a></li>
-            </ul>
-            <div class="nav-label">Account</div>
-            <ul>
-                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 0.5rem;">Logout</button></li>
-            </ul>
-        </nav>
-    </aside>
 
-    <main class="content">
-        <header class="topbar">
-            <div>
-                <h2>Stock Simulator</h2>
-                <p class="text-secondary text-sm">Experience real market volatility with virtual currency.</p>
-            </div>
-            <div class="user-stats">
-                <span class="stat-pill xp-pill">Lvl <span id="level-txt">1</span></span>
-                <span class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></span>
-            </div>
-        </header>
+<aside class="sidebar">
+    <h1 class="logo" style="color:#fff;">Finova.</h1>
+    <nav>
+        <div class="nav-label">Menu</div>
+        <ul>
+            <li><a href="/dashboard.html">Dashboard</a></li>
+            <li><a href="/leaderboard.html">Leaderboard</a></li>
+        </ul>
+        <div class="nav-label">Modules</div>
+        <ul>
+            <li><a href="/stock_market.html" class="active">Stock Market</a></li>
+            <li><a href="/scams.html">UPI Safety</a></li>
+            <li><a href="/tax.html">Tax Challenge</a></li>
+        </ul>
+        <div class="nav-label">Account</div>
+        <ul>
+            <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top:0.5rem;">Logout</button></li>
+        </ul>
+    </nav>
+</aside>
 
-        <section class="overview">
-            <div id="market-msg" class="text-center font-medium mb-4"></div>
-            <div id="market-err" class="text-center font-medium text-danger mb-4"></div>
+<main class="content">
+    <header class="topbar">
+        <div>
+            <h2>Stock Market Simulator</h2>
+            <p class="text-secondary text-sm"><span class="live-dot"></span>Prices refresh every 5 s &nbsp;·&nbsp; Virtual money only</p>
+        </div>
+        <div class="user-stats">
+            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
+            <span class="stat-pill balance-pill">Rs.<span id="balance-txt">10000.00</span></span>
+        </div>
+    </header>
 
-            <div class="grid-2">
-                <div class="card p-0" style="overflow: hidden;">
-                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
-                        <h3 class="mb-2">Available Stocks</h3>
-                        <p class="text-sm text-secondary">Prices update automatically.</p>
-                    </div>
-                    <table style="border: none;">
-                        <thead>
-                            <tr>
-                                <th>Symbol</th>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stock-list">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
+    <div class="market-grid">
+
+        <!-- ── Live Market ── -->
+        <div class="card p-0" style="overflow:hidden;">
+            <div style="padding:1rem 1.25rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h3>Live Market</h3>
+                    <p class="text-sm text-secondary">8 Indian stocks · prices simulated</p>
                 </div>
+                <span id="last-refresh" class="text-secondary text-sm"></span>
+            </div>
+            <div id="stock-list">
+                <p class="text-secondary text-center" style="padding:2rem;">Loading market data...</p>
+            </div>
+        </div>
 
-                <div class="card p-0" style="overflow: hidden; height: fit-content;">
-                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
-                        <h3 class="text-primary-color mb-2">Portfolio</h3>
-                        <p class="text-sm text-secondary">Assets currently owned.</p>
-                    </div>
-                    <div id="portfolio-list" style="padding: 1.5rem;">
-                        <p class="text-secondary text-center">You don't own any stocks yet.</p>
-                    </div>
+        <!-- ── Right panel ── -->
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+
+            <!-- Portfolio -->
+            <div class="card p-0" style="overflow:hidden;">
+                <div style="padding:1rem 1.25rem; border-bottom:1px solid var(--border-color);">
+                    <h3>My Portfolio</h3>
+                    <p class="text-sm text-secondary">Unrealised P&amp;L shown below</p>
+                </div>
+                <div id="portfolio-list">
+                    <p class="text-secondary text-center" style="padding:1.5rem; font-size:0.85rem;">You don't own any stocks yet.</p>
                 </div>
             </div>
-        </section>
 
-    </main>
+            <!-- Session Stats -->
+            <div class="card">
+                <h3 style="margin-bottom:1rem;">Session Stats</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div class="stat-box">
+                        <div class="stat-val" id="stat-trades">0</div>
+                        <div class="text-secondary text-sm">Trades</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="stat-pnl" style="color:var(--text-primary);">Rs.0</div>
+                        <div class="text-secondary text-sm">Realised P&amp;L</div>
+                    </div>
+                </div>
+            </div>
 
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/dashboard.js"></script>
-    <script src="/static/js/stocks.js"></script>
-    <script>
-        authCheck();
-        fetchProfile();
-        initStocks();
-    </script>
+            <!-- How it works -->
+            <div class="card" style="font-size:0.82rem; color:var(--text-secondary); line-height:1.6;">
+                <h3 style="margin-bottom:0.6rem; color:var(--text-primary);">How it works</h3>
+                <p>1. Enter quantity → click <strong>Buy</strong> to purchase shares.</p>
+                <p style="margin-top:0.35rem;">2. Prices update every 5 seconds with random volatility.</p>
+                <p style="margin-top:0.35rem;">3. <strong>Sell</strong> when price is higher than your avg buy price to profit.</p>
+                <p style="margin-top:0.35rem;">4. You earn <strong>10 XP</strong> for every profitable sell.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script>
+    // ── State ────────────────────────────────────────────────────────
+    let _prevPrices   = {};
+    let _sessionTrades = 0;
+    let _sessionPnL    = 0.0;
+
+    // ── Auth guard ───────────────────────────────────────────────────
+    authCheck();
+
+    // Refresh currentUser from localStorage at page load
+    // (in case dashboard.js was cached with old value)
+    const _user = localStorage.getItem('finova_user');
+    if (!_user) { window.location.href = 'index.html'; }
+
+    // ── Init ─────────────────────────────────────────────────────────
+    fetchProfile();
+    _loadMarket();
+    _loadPortfolio();
+    setInterval(() => { _loadMarket(); _loadPortfolio(); }, 5000);
+
+    // ── Load stocks ──────────────────────────────────────────────────
+    async function _loadMarket() {
+        try {
+            const res = await fetch(`${API_BASE}/stocks/`);
+            if (!res.ok) { console.error('Market load failed', res.status); return; }
+            const stocks = await res.json();
+            _renderMarket(stocks);
+            document.getElementById('last-refresh').innerText =
+                'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        } catch (e) {
+            console.error('_loadMarket error:', e);
+        }
+    }
+
+    function _renderMarket(stocks) {
+        let html = '';
+        stocks.forEach(st => {
+            const price = parseFloat(st.current_price);
+            const prev  = _prevPrices[st.symbol] ?? price;
+            const diff  = price - prev;
+            const pct   = prev !== 0 ? ((diff / prev) * 100).toFixed(2) : '0.00';
+            const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '—';
+            const cls   = diff > 0 ? 'change-up' : diff < 0 ? 'change-dn' : 'change-neu';
+            _prevPrices[st.symbol] = price;
+
+            html += `
+            <div class="stock-row">
+                <div>
+                    <div class="stock-sym">${st.symbol}
+                        <span class="${cls}" style="margin-left:0.4rem;">${arrow} ${Math.abs(pct)}%</span>
+                    </div>
+                    <div class="stock-name">${st.name}</div>
+                    <div class="stock-price" style="margin-top:3px;">Rs.${price.toFixed(2)}</div>
+                </div>
+                <div class="trade-zone">
+                    <input  class="qty-box" id="qty-${st.id}" type="number" value="10" min="1" max="500">
+                    <button class="btn-buy"  onclick="_trade(${st.id},'buy')">Buy</button>
+                    <button class="btn-sell" onclick="_trade(${st.id},'sell')">Sell</button>
+                </div>
+            </div>`;
+        });
+        document.getElementById('stock-list').innerHTML = html;
+    }
+
+    // ── Load portfolio ───────────────────────────────────────────────
+    async function _loadPortfolio() {
+        const user = localStorage.getItem('finova_user');
+        if (!user) return;
+        try {
+            const res = await fetch(`${API_BASE}/stocks/portfolio/?username=${encodeURIComponent(user)}`);
+            if (!res.ok) { console.error('Portfolio load failed', res.status); return; }
+            const data = await res.json();
+            _renderPortfolio(data);
+        } catch (e) {
+            console.error('_loadPortfolio error:', e);
+        }
+    }
+
+    function _renderPortfolio(items) {
+        const el = document.getElementById('portfolio-list');
+        if (!items.length) {
+            el.innerHTML = '<p class="text-secondary text-center" style="padding:1.5rem; font-size:0.85rem;">You don\'t own any stocks yet.</p>';
+            return;
+        }
+        let html = '';
+        items.forEach(p => {
+            const cur  = parseFloat(p.current_price);
+            const avg  = parseFloat(p.average_buy_price);
+            const pnl  = (cur - avg) * p.quantity;
+            const sign = pnl >= 0 ? '+' : '';
+            const cls  = pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+            html += `
+            <div class="port-row">
+                <div>
+                    <div class="port-sym">${p.symbol}</div>
+                    <div class="port-meta">${p.quantity} shares &nbsp;·&nbsp; Avg Rs.${avg.toFixed(2)}</div>
+                    <div class="port-meta">Now Rs.${cur.toFixed(2)}</div>
+                </div>
+                <div class="port-pnl ${cls}">${sign}Rs.${Math.abs(pnl).toFixed(2)}<br><span style="font-size:0.7rem; opacity:0.75;">Unrealised</span></div>
+            </div>`;
+        });
+        el.innerHTML = html;
+    }
+
+    // ── Trade ────────────────────────────────────────────────────────
+    async function _trade(stockId, action) {
+        const user = localStorage.getItem('finova_user');
+        if (!user) { _toast('Please log in first.', 'error'); window.location.href = 'index.html'; return; }
+
+        const qtyEl = document.getElementById('qty-' + stockId);
+        const qty   = parseInt(qtyEl ? qtyEl.value : '10');
+        if (!qty || qty < 1) { _toast('Enter a valid quantity (at least 1).', 'error'); return; }
+
+        const endpoint = action === 'buy' ? `${API_BASE}/stocks/buy/` : `${API_BASE}/stocks/sell/`;
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, stock_id: stockId, quantity: qty })
+            });
+
+            let data;
+            try {
+                data = await res.json();
+            } catch (_) {
+                _toast('Server returned an unexpected response.', 'error');
+                return;
+            }
+
+            if (res.ok) {
+                _sessionTrades++;
+                document.getElementById('stat-trades').innerText = _sessionTrades;
+
+                let msg = data.message || (action === 'buy' ? 'Bought successfully' : 'Sold successfully');
+
+                if (data.profit !== undefined) {
+                    const pnl  = parseFloat(data.profit);
+                    _sessionPnL += pnl;
+                    const sign = pnl >= 0 ? '+' : '';
+                    msg += '   |   P&L: ' + sign + 'Rs.' + pnl.toFixed(2);
+
+                    const pnlEl = document.getElementById('stat-pnl');
+                    pnlEl.innerText = (_sessionPnL >= 0 ? '+' : '') + 'Rs.' + _sessionPnL.toFixed(2);
+                    pnlEl.style.color = _sessionPnL >= 0 ? '#16a34a' : '#dc2626';
+                }
+
+                _toast(msg, 'success');
+                fetchProfile();
+                _loadPortfolio();
+            } else {
+                _toast(data.error || 'Transaction failed. Check your balance or holdings.', 'error');
+            }
+        } catch (e) {
+            _toast('Network error. Make sure the server is running.', 'error');
+            console.error('_trade error:', e);
+        }
+    }
+
+    // ── Toast ────────────────────────────────────────────────────────
+    function _toast(msg, type) {
+        const old = document.getElementById('toast-el');
+        if (old) old.remove();
+        const el = document.createElement('div');
+        el.id        = 'toast-el';
+        el.className = type || 'success';
+        el.innerText = msg;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4500);
+    }
+</script>
 </body>
 </html>

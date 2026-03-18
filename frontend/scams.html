@@ -3,68 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finova - Scenarios</title>
+    <title>Finova – UPI Safety</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .module-grid { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; align-items: start; }
+        
+        /* ── Phone Frame ─────────────────────────────────────────── */
+        .phone-frame {
+            background: #1a1a2e; border-radius: 2rem; padding: 1rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            max-width: 340px; margin: 0 auto; position: relative;
+        }
+        .phone-notch  { width: 80px; height: 22px; background: #0d0d1a; border-radius: 999px; margin: 0 auto 0.75rem; }
+        .phone-screen { background: #f2f2f7; border-radius: 1.25rem; overflow: hidden; min-height: 320px; }
+        .phone-statusbar { background: #fff; padding: 0.4rem 1rem; font-size: 0.7rem; font-weight: 600; display: flex; justify-content: space-between; color: #1c1c1e; }
+        .q-progress-wrap { padding: 0.2rem 0.5rem; background: #1a1a2e; }
+        .q-progress-bg   { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .q-progress-fill { height: 100%; background: #34c759; border-radius: 2px; transition: width 0.4s; }
+
+        /* ── Actions ─────────────────────────────────────────────── */
+        .action-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+        .choice-btn {
+            padding: 0.75rem; font-weight: 700; font-size: 0.9rem;
+            border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;
+        }
+        .choice-safe  { background: #f0fdf4; color: #166534; border: 2px solid #86efac; }
+        .choice-safe:hover  { background: #dcfce7; transform: translateY(-1px); }
+        .choice-risky { background: #fef2f2; color: #991b1b; border: 2px solid #fca5a5; }
+        .choice-risky:hover { background: #fee2e2; transform: translateY(-1px); }
+
+        /* ── Explanation Card ────────────────────────────────────── */
+        .explain-card { display: none; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-color); animation: slideDown 0.35s ease; margin-top: 1rem; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .explain-verdict { padding: 1.25rem 1.5rem; font-size: 1.1rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .explain-verdict.correct { background: #166534; color: #fff; }
+        .explain-verdict.wrong   { background: #991b1b; color: #fff; }
+        
+        .verdict-change { font-size: 0.85rem; padding: 0.2rem 0.6rem; background: rgba(255,255,255,0.2); border-radius: 999px; }
+        .explain-body { background: #fff; padding: 1.25rem 1.5rem; }
+        .explain-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 0.4rem; }
+        .explain-text { font-size: 0.875rem; line-height: 1.7; color: var(--text-primary); }
+
+        /* ── Components ──────────────────────────────────────────── */
+        .xp-flash { display: none; padding: 0.4rem 0.9rem; border-radius: 999px; font-weight: 700; font-size: 0.85rem; animation: popIn 0.4s cubic-bezier(.175,.885,.32,1.275); }
+        .xp-flash.gain { background: #dcfce7; color: #166534; }
+        .xp-flash.loss { background: #fee2e2; color: #991b1b; }
+        @keyframes popIn { 0%{transform:scale(0.6);opacity:0} 100%{transform:scale(1);opacity:1} }
+
+        .streak-badge { background: #f59e0b; color: #fff; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; margin-left: 0.5rem; display: none; }
+
+        .right-panel { display: flex; flex-direction: column; gap: 1rem; }
+        .info-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; }
+        .score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; }
+        .score-box { text-align: center; padding: 0.75rem; background: var(--bg-color); border-radius: var(--radius-sm); }
+        .score-val { font-size: 1.5rem; font-weight: 700; }
+        
+        .xp-bar-bg { height: 8px; background: var(--bg-color); border-radius: 4px; margin-top: 0.4rem; }
+        .xp-bar-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease; }
+
+        .tip-strip { background: #fefce8; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: 0.75rem 1rem; font-size: 0.82rem; color: #92400e; margin-bottom: 1rem; }
+        @media (max-width: 900px) { .module-grid { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body class="dashboard-layout">
-    
-    <aside class="sidebar">
-        <h1 class="logo" style="color: var(--primary);">Finova.</h1>
-        <nav>
-            <div class="nav-label">Menu</div>
-            <ul>
-                <li><a href="/dashboard.html">Dashboard</a></li>
-                <li><a href="/leaderboard.html">Leaderboard</a></li>
-            </ul>
-            <div class="nav-label">Modules</div>
-            <ul>
-                <li><a href="/stock_market.html">Stock Market</a></li>
-                <li><a href="/scams.html" class="active">UPI Safety</a></li>
-                <li><a href="/tax.html">Tax Challenge</a></li>
-            </ul>
-            <div class="nav-label">Account</div>
-            <ul>
-                <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top: 0.5rem;">Logout</button></li>
-            </ul>
-        </nav>
-    </aside>
+<aside class="sidebar">
+    <h1 class="logo" style="color:#fff;">Finova.</h1>
+    <nav>
+        <div class="nav-label">Menu</div>
+        <ul>
+            <li><a href="/dashboard.html">Dashboard</a></li>
+            <li><a href="/leaderboard.html">Leaderboard</a></li>
+        </ul>
+        <div class="nav-label">Modules</div>
+        <ul>
+            <li><a href="/stock_market.html">Stock Market</a></li>
+            <li><a href="/scams.html" class="active">UPI Safety</a></li>
+            <li><a href="/tax.html">Tax Challenge</a></li>
+        </ul>
+        <div class="nav-label">Account</div>
+        <ul>
+            <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top:0.5rem;">Logout</button></li>
+        </ul>
+    </nav>
+</aside>
 
-    <main class="content">
-        <header class="topbar">
-            <div>
-                <h2>UPI Safety</h2>
-                <p class="text-secondary text-sm">Identify digital scams and phishing links.</p>
-            </div>
-            <div class="user-stats">
-                <span class="stat-pill xp-pill">Lvl <span id="level-txt">1</span></span>
-                <span class="stat-pill balance-pill">₹<span id="balance-txt">10000.00</span></span>
-            </div>
-        </header>
+<main class="content">
+    <header class="topbar">
+        <div>
+            <h2>UPI Safety</h2>
+            <p class="text-secondary text-sm">Review the message and decide whether to decline or pay.</p>
+        </div>
+        <div class="user-stats">
+            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
+            <span class="stat-pill balance-pill">Rs.<span id="balance-txt">10000.00</span></span>
+        </div>
+    </header>
 
-        <section class="center-content p-0" style="min-height: 40vh;">
-            <div class="card" id="scenario-card" style="width: 100%; max-width: 500px; text-align: center;">
-                <h3 id="sc-type" class="text-sm text-secondary font-bold mb-2">Loading...</h3>
-                <h2 id="sc-title" class="text-xl mb-4 text-primary-color">Loading Scenario...</h2>
-                <p id="sc-desc" class="mb-6 mt-4"></p>
-                
-                <div id="sc-actions" class="flex gap-4 justify-between w-100">
-                    <!-- populated by js -->
+    <div class="tip-strip">
+        <strong>Golden Rule:</strong> A real bank or UPI app will NEVER ask for your OTP, UPI PIN, or password via call, SMS, or link.
+    </div>
+
+    <div class="module-grid">
+        <!-- Left Column -->
+        <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <div>
+                    <span id="sc-badge" style="display:inline-block; padding:0.2rem 0.7rem; border-radius:999px; font-size:0.72rem; font-weight:700; text-transform:uppercase;">Scenario</span>
                 </div>
-                
-                <div id="sc-result" style="display: none; text-align: left;"></div>
-                <button class="btn btn-primary w-100 mt-4" id="next-btn" style="display: none;" onclick="loadScenario('SCAM')">Next Scenario</button>
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <span id="streak-badge" class="streak-badge">3 streak!</span>
+                    <span id="q-counter" class="text-secondary text-sm">Loading...</span>
+                    <span class="xp-flash" id="xp-flash"></span>
+                </div>
             </div>
-        </section>
 
-    </main>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                    <div class="phone-statusbar">
+                        <span>9:41</span><span>Finova 5G</span><span>100%</span>
+                    </div>
+                    <div id="phone-content" style="min-height: 250px;"></div>
+                </div>
+                <div class="q-progress-wrap">
+                    <div class="q-progress-bg">
+                        <div class="q-progress-fill" id="q-progress" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
 
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/dashboard.js"></script>
-    <script src="/static/js/scenarios.js"></script>
-    <script>
-        authCheck();
-        fetchProfile();
-        loadScenario('SCAM');
-    </script>
+            <!-- Action buttons container (unified ID) -->
+            <div id="action-zone" class="action-zone"></div>
+
+            <!-- Explanation Card -->
+            <div id="explain-card" class="explain-card">
+                <div class="explain-verdict" id="explain-verdict">
+                    <span id="verdict-icon">Correct!</span>
+                    <span class="verdict-change" id="verdict-change"></span>
+                </div>
+                <div class="explain-body">
+                    <div class="explain-label">What Really Happened</div>
+                    <div class="explain-text" id="explain-text"></div>
+                    <button id="next-btn" class="btn btn-primary" style="margin-top:1.5rem; width:100%;">Next Scenario</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column (Stats) -->
+        <div class="right-panel">
+            <div class="info-card">
+                <h3 style="margin-bottom:1rem;">Session Score</h3>
+                <div class="score-grid">
+                    <div class="score-box">
+                        <div class="score-val text-success" id="score-correct">0</div>
+                        <div class="text-secondary text-sm">Correct</div>
+                    </div>
+                    <div class="score-box">
+                        <div class="score-val text-danger" id="score-wrong">0</div>
+                        <div class="text-secondary text-sm">Wrong</div>
+                    </div>
+                    <div class="score-box">
+                        <div class="score-val text-primary-color" id="score-xp">0</div>
+                        <div class="text-secondary text-sm">XP</div>
+                    </div>
+                </div>
+                <div style="margin-top:1rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                        <span class="text-secondary">Accuracy</span>
+                        <span id="accuracy-val" class="font-bold">—</span>
+                    </div>
+                    <div class="xp-bar-bg"><div class="xp-bar-fill" id="accuracy-bar" style="width:0%"></div></div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3 style="margin-bottom:0.75rem;">Common Scam Types</h3>
+                <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.82rem;">
+                    <div style="padding:0.5rem; background:#fef2f2; border-radius:6px; border-left:3px solid #dc2626;">
+                        <strong>Advance Fee Fraud</strong><br><span class="text-secondary">Pay a small fee to get a big prize (the prize never arrives).</span>
+                    </div>
+                    <div style="padding:0.5rem; background:#fff7ed; border-radius:6px; border-left:3px solid #ea580c;">
+                        <strong>OTP Phishing</strong><br><span class="text-secondary">Caller tricks you into sharing your OTP to "verify" your account.</span>
+                    </div>
+                    <div style="padding:0.5rem; background:#fef9c3; border-radius:6px; border-left:3px solid #ca8a04;">
+                        <strong>QR Send/Receive Swap</strong><br><span class="text-secondary">You scan thinking you will receive money, but you actually send it.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script src="/static/js/scenarios.js"></script>
+<script>
+    authCheck();
+    fetchProfile();
+    initScenarioModule('SCAM');
+</script>
 </body>
 </html>
