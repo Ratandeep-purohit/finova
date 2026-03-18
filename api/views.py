@@ -85,6 +85,43 @@ def claim_mission_reward(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def convert_xp(request):
+    """Convert XP to virtual money. Rate: 10 XP = Rs.100 (Rs.10 per XP)."""
+    username   = request.data.get('username')
+    xp_to_use  = int(request.data.get('xp_amount', 0))
+
+    if xp_to_use <= 0:
+        return Response({'error': 'Invalid XP amount'}, status=status.HTTP_400_BAD_REQUEST)
+    if xp_to_use % 10 != 0:
+        return Response({'error': 'XP must be in multiples of 10'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        profile = UserProfile.objects.get(user__username=username)
+
+        if profile.xp < xp_to_use:
+            return Response({'error': f'Not enough XP. You have {profile.xp} XP.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        money_gained = Decimal(str(xp_to_use * 10))   # 1 XP = Rs.10
+        profile.xp      -= xp_to_use
+        profile.balance += money_gained
+
+        # Recalculate level after XP deduction
+        profile.level = max(1, (profile.xp // 500) + 1)
+        profile.save()
+
+        return Response({
+            'message': f'Converted {xp_to_use} XP → Rs.{money_gained}',
+            'xp':      profile.xp,
+            'balance': round(float(profile.balance), 2),
+            'level':   profile.level,
+        })
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_leaderboard(request):

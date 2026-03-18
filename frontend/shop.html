@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finova – XP Shop</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* ── Page layout ── */
+        .shop-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media(max-width:900px){ .shop-layout { grid-template-columns: 1fr; } }
+
+        /* ── Hero wallet card ── */
+        .wallet-card {
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 60%, #2563eb 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(124,58,237,0.3);
+            margin-bottom: 1.5rem;
+        }
+        .wallet-card::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 220px; height: 220px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+        .wallet-card::after {
+            content: '';
+            position: absolute;
+            bottom: -80px; left: -40px;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
+        }
+        .wallet-label { font-size: 0.85rem; opacity: 0.75; font-weight: 500; margin-bottom: 0.25rem; }
+        .wallet-xp { font-size: 3rem; font-weight: 900; line-height: 1; }
+        .wallet-sub { font-size: 0.9rem; opacity: 0.75; margin-top: 0.4rem; }
+        .wallet-divider { height: 1px; background: rgba(255,255,255,0.2); margin: 1.5rem 0; }
+        .wallet-row { display: flex; justify-content: space-between; align-items: center; }
+        .wallet-stat { text-align: center; }
+        .wallet-stat-val { font-size: 1.3rem; font-weight: 800; }
+        .wallet-stat-lbl { font-size: 0.72rem; opacity: 0.7; margin-top: 2px; }
+
+        /* ── Rate display ── */
+        .rate-banner {
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        /* ── Shop items grid ── */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        @media(max-width:700px){ .shop-grid { grid-template-columns: 1fr 1fr; } }
+
+        .shop-item {
+            background: var(--surface);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .shop-item:hover { 
+            border-color: #7c3aed;
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(124,58,237,0.15);
+        }
+        .shop-item.popular::before {
+            content: 'POPULAR';
+            position: absolute;
+            top: 10px; right: -22px;
+            background: #f59e0b;
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 0.2rem 2rem;
+            transform: rotate(45deg);
+            letter-spacing: 0.05em;
+        }
+        .shop-item.best::before {
+            content: 'BEST VALUE';
+            position: absolute;
+            top: 10px; right: -26px;
+            background: #10b981;
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 0.2rem 2rem;
+            transform: rotate(45deg);
+            letter-spacing: 0.05em;
+        }
+        .item-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .item-xp-cost {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #7c3aed;
+        }
+        .item-xp-lbl { font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; }
+        .item-arrow { font-size: 1rem; color: var(--text-secondary); margin: 0.4rem 0; }
+        .item-money {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #059669;
+        }
+        .item-money-lbl { font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; }
+        .item-btn {
+            margin-top: 1rem;
+            width: 100%;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .item-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .item-btn:disabled { background: #9ca3af; cursor: not-allowed; transform: none; }
+
+        /* ── Custom amount ── */
+        .custom-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .custom-input-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .custom-xp-input {
+            flex: 1;
+            padding: 0.85rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .custom-xp-input:focus { border-color: #7c3aed; }
+        .custom-convert-btn {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 0.85rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .custom-convert-btn:hover { filter: brightness(1.1); }
+        .custom-preview {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.75rem;
+            font-weight: 600;
+        }
+        .custom-preview strong { color: #059669; }
+
+        /* ── Right sidebar ── */
+        .right-sidebar { display: flex; flex-direction: column; gap: 1.2rem; }
+        .side-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        .side-title { font-weight: 800; font-size: 1rem; margin-bottom: 1rem; }
+
+        /* ── Leaderboard mini ── */
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .lb-row:last-child { border-bottom: none; }
+        .lb-rank {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 800;
+        }
+        .rank-1 { background: #fef08a; color: #854d0e; }
+        .rank-2 { background: #e2e8f0; color: #475569; }
+        .rank-3 { background: #fed7aa; color: #92400e; }
+        .rank-n { background: var(--bg-color); color: var(--text-secondary); }
+        .lb-name { flex: 1; font-size: 0.85rem; font-weight: 700; }
+        .lb-xp { font-size: 0.8rem; font-weight: 700; color: #7c3aed; }
+
+        /* ── Success toast ── */
+        .toast {
+            position: fixed;
+            top: 24px; right: 24px;
+            background: #065f46;
+            color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            display: none;
+        }
+        @keyframes toastIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+
+        /* ── Transaction log ── */
+        .tx-row { padding: 0.6rem 0; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; }
+        .tx-row:last-child { border-bottom: none; }
+        .tx-desc { color: var(--text-secondary); }
+        .tx-amount { font-weight: 800; color: #059669; }
+    </style>
+</head>
+<body class="dashboard-layout">
+
+<aside class="sidebar">
+    <h1 class="logo" style="color:#fff;">Finova.</h1>
+    <nav>
+        <div class="nav-label">Menu</div>
+        <ul>
+            <li><a href="/dashboard.html">Dashboard</a></li>
+            <li><a href="/leaderboard.html">Leaderboard</a></li>
+        </ul>
+        <div class="nav-label">Simulators</div>
+        <ul>
+            <li><a href="/stock_market.html">Stock Market</a></li>
+            <li><a href="/scams.html">UPI Safety</a></li>
+            <li><a href="/tax.html">Tax Challenge</a></li>
+        </ul>
+        <div class="nav-label">Learning</div>
+        <ul>
+            <li><a href="/videos.html">Video Library</a></li>
+        </ul>
+        <div class="nav-label">Rewards</div>
+        <ul>
+            <li><a href="/shop.html" class="active">XP Shop</a></li>
+        </ul>
+        <div class="nav-label">Account</div>
+        <ul>
+            <li><button class="btn btn-outline w-100" onclick="logout()" style="margin-top:0.5rem;">Logout</button></li>
+        </ul>
+    </nav>
+</aside>
+
+<main class="content">
+    <header class="topbar">
+        <div>
+            <h2>XP Shop</h2>
+            <p class="text-secondary text-sm">Convert your earned XP into virtual cash. Rate: 10 XP = Rs.100</p>
+        </div>
+        <div class="user-stats">
+            <span class="stat-pill xp-pill"><span id="level-txt">Lvl 1</span></span>
+            <span class="stat-pill balance-pill">Rs.<span id="balance-txt">0.00</span></span>
+        </div>
+    </header>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <div class="shop-layout">
+
+        <!-- ── Left ── -->
+        <div>
+            <!-- Wallet hero -->
+            <div class="wallet-card">
+                <div class="wallet-label">Your XP Balance</div>
+                <div class="wallet-xp"><span id="wallet-xp">0</span> XP</div>
+                <div class="wallet-sub">Available to convert right now</div>
+                <div class="wallet-divider"></div>
+                <div class="wallet-row">
+                    <div class="wallet-stat">
+                        <div class="wallet-stat-val">Rs.<span id="wallet-balance">0</span></div>
+                        <div class="wallet-stat-lbl">Cash Balance</div>
+                    </div>
+                    <div class="wallet-stat">
+                        <div class="wallet-stat-val">Lvl <span id="wallet-level">1</span></div>
+                        <div class="wallet-stat-lbl">Current Level</div>
+                    </div>
+                    <div class="wallet-stat">
+                        <div class="wallet-stat-val">Rs.<span id="wallet-max-convert">0</span></div>
+                        <div class="wallet-stat-lbl">Max Convertible</div>
+                    </div>
+                </div>
+                <div class="rate-banner">
+                    💡 Conversion rate: <strong>10 XP = Rs.100</strong> &nbsp;(Rs.10 per XP)
+                </div>
+            </div>
+
+            <!-- Quick Buy Packages -->
+            <h3 style="margin-bottom:1rem; color:var(--text-primary);">Quick Packages</h3>
+            <div class="shop-grid">
+                <div class="shop-item" onclick="quickBuy(10)">
+                    <div class="item-icon">💰</div>
+                    <div class="item-xp-cost">10 XP</div>
+                    <div class="item-xp-lbl">spend</div>
+                    <div class="item-arrow">↓</div>
+                    <div class="item-money">Rs.100</div>
+                    <div class="item-money-lbl">receive</div>
+                    <button class="item-btn" onclick="event.stopPropagation(); quickBuy(10)">Convert</button>
+                </div>
+
+                <div class="shop-item popular" onclick="quickBuy(50)">
+                    <div class="item-icon">💎</div>
+                    <div class="item-xp-cost">50 XP</div>
+                    <div class="item-xp-lbl">spend</div>
+                    <div class="item-arrow">↓</div>
+                    <div class="item-money">Rs.500</div>
+                    <div class="item-money-lbl">receive</div>
+                    <button class="item-btn" onclick="event.stopPropagation(); quickBuy(50)">Convert</button>
+                </div>
+
+                <div class="shop-item best" onclick="quickBuy(100)">
+                    <div class="item-icon">🏆</div>
+                    <div class="item-xp-cost">100 XP</div>
+                    <div class="item-xp-lbl">spend</div>
+                    <div class="item-arrow">↓</div>
+                    <div class="item-money">Rs.1,000</div>
+                    <div class="item-money-lbl">receive</div>
+                    <button class="item-btn" onclick="event.stopPropagation(); quickBuy(100)">Convert</button>
+                </div>
+
+                <div class="shop-item" onclick="quickBuy(200)">
+                    <div class="item-icon">🚀</div>
+                    <div class="item-xp-cost">200 XP</div>
+                    <div class="item-xp-lbl">spend</div>
+                    <div class="item-arrow">↓</div>
+                    <div class="item-money">Rs.2,000</div>
+                    <div class="item-money-lbl">receive</div>
+                    <button class="item-btn" onclick="event.stopPropagation(); quickBuy(200)">Convert</button>
+                </div>
+
+                <div class="shop-item" onclick="quickBuy(500)">
+                    <div class="item-icon">👑</div>
+                    <div class="item-xp-cost">500 XP</div>
+                    <div class="item-xp-lbl">spend</div>
+                    <div class="item-arrow">↓</div>
+                    <div class="item-money">Rs.5,000</div>
+                    <div class="item-money-lbl">receive</div>
+                    <button class="item-btn" onclick="event.stopPropagation(); quickBuy(500)">Convert</button>
+                </div>
+
+                <div class="shop-item" onclick="quickBuy(1000)">
+                    <div class="item-icon">🌟</div>
+                    <div class="item-xp-cost">1000 XP</div>
+                    <div class="item-xp-lbl">spend</div>
+                    <div class="item-arrow">↓</div>
+                    <div class="item-money">Rs.10,000</div>
+                    <div class="item-money-lbl">receive</div>
+                    <button class="item-btn" onclick="event.stopPropagation(); quickBuy(1000)">Convert</button>
+                </div>
+            </div>
+
+            <!-- Custom amount -->
+            <div class="custom-card">
+                <h3 style="margin-bottom:0.25rem;">Custom Conversion</h3>
+                <p class="text-secondary text-sm">Enter any multiple of 10 XP to convert</p>
+                <div class="custom-input-row">
+                    <input type="number" class="custom-xp-input" id="custom-xp" 
+                           placeholder="e.g. 30" min="10" step="10"
+                           oninput="updatePreview()">
+                    <button class="custom-convert-btn" onclick="doConvert()">Convert XP →</button>
+                </div>
+                <div class="custom-preview" id="custom-preview">Enter an amount to see the preview</div>
+            </div>
+
+            <!-- Transaction history -->
+            <div class="custom-card" style="margin-top:1.5rem;">
+                <h3>Conversion History</h3>
+                <div id="tx-log" style="margin-top:1rem;">
+                    <div class="tx-row">
+                        <span class="tx-desc" style="color:var(--text-secondary); font-size:0.82rem;">No conversions yet. Make your first one!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Right Panel ── -->
+        <div class="right-sidebar">
+
+            <!-- Info card -->
+            <div class="side-card" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-color: #ddd6fe;">
+                <div class="side-title" style="color:#5b21b6;">How XP Conversion Works</div>
+                <div style="font-size:0.85rem; line-height:1.7; color:#4c1d95; display:flex; flex-direction:column; gap:0.6rem;">
+                    <div>🎮 <strong>Earn XP</strong> by answering UPI Safety & Tax Challenge questions correctly.</div>
+                    <div>🔥 <strong>Streak bonuses</strong> multiply your XP rewards.</div>
+                    <div>💸 <strong>Convert XP</strong> to virtual cash here at Rs.10 per XP.</div>
+                    <div>📈 <strong>Use that cash</strong> to buy more stocks in the market!</div>
+                    <div>⚠️ Converting XP <strong>reduces your leaderboard score</strong> — trade-off wisely.</div>
+                </div>
+            </div>
+
+            <!-- Mini Leaderboard -->
+            <div class="side-card">
+                <div class="side-title">Live Leaderboard</div>
+                <div id="mini-lb">
+                    <p class="text-secondary text-sm">Loading...</p>
+                </div>
+                <a href="/leaderboard.html" style="display:block; text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--primary); font-weight:700;">View Full Leaderboard →</a>
+            </div>
+
+        </div>
+
+    </div>
+</main>
+
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script>
+    authCheck();
+    
+    const user = localStorage.getItem('finova_user');
+    let _txLog = [];
+    let _currentXP = 0;
+
+    async function loadWallet() {
+        if (!user) return;
+        try {
+            const res = await fetch(`${API_BASE}/user/profile/?username=${encodeURIComponent(user)}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            _currentXP = data.xp;
+
+            document.getElementById('wallet-xp').innerText = data.xp;
+            document.getElementById('wallet-balance').innerText = parseFloat(data.balance).toFixed(0);
+            document.getElementById('wallet-level').innerText = data.level;
+            document.getElementById('wallet-max-convert').innerText = (Math.floor(data.xp / 10) * 100).toLocaleString('en-IN');
+
+            // Also update topbar via dashboard.js
+            const safe = (id, v) => { const el = document.getElementById(id); if(el) el.innerText = v; };
+            safe('level-txt', `Lvl ${data.level}`);
+            safe('balance-txt', parseFloat(data.balance).toFixed(2));
+        } catch(e) {
+            console.error('loadWallet', e);
+        }
+    }
+
+    async function loadMiniLB() {
+        try {
+            const res = await fetch(`${API_BASE}/leaderboard/`);
+            if (!res.ok) return;
+            const rows = await res.json();
+            let html = '';
+            rows.slice(0, 7).forEach((r, i) => {
+                const rankCls = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-n';
+                const medal   = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+                const isMe    = r.username === user;
+                html += `<div class="lb-row" style="${isMe ? 'background:#faf5ff; border-radius:8px; padding:0.5rem;' : ''}">
+                    <div class="lb-rank ${rankCls}">${medal}</div>
+                    <div class="lb-name" style="${isMe ? 'color:#7c3aed;' : ''}">${r.username}${isMe ? ' (you)':''}</div>
+                    <div class="lb-xp">${r.xp} XP</div>
+                </div>`;
+            });
+            document.getElementById('mini-lb').innerHTML = html || '<p class="text-secondary text-sm">No data.</p>';
+        } catch(e) {
+            console.error('loadMiniLB', e);
+        }
+    }
+
+    function updatePreview() {
+        const xp = parseInt(document.getElementById('custom-xp').value) || 0;
+        const prev = document.getElementById('custom-preview');
+        if (!xp || xp <= 0) {
+            prev.innerHTML = 'Enter an amount to see the preview';
+            return;
+        }
+        if (xp % 10 !== 0) {
+            prev.innerHTML = '<span style="color:#dc2626;">XP must be a multiple of 10 (e.g. 10, 20, 50...)</span>';
+            return;
+        }
+        if (xp > _currentXP) {
+            prev.innerHTML = `<span style="color:#dc2626;">Not enough XP! You only have ${_currentXP} XP.</span>`;
+            return;
+        }
+        const money = xp * 10;
+        prev.innerHTML = `${xp} XP → <strong>Rs.${money.toLocaleString('en-IN')}</strong> &nbsp;(${_currentXP - xp} XP remaining)`;
+    }
+
+    async function quickBuy(xpAmount) {
+        await doConvertAmount(xpAmount);
+    }
+
+    function doConvert() {
+        const xp = parseInt(document.getElementById('custom-xp').value) || 0;
+        doConvertAmount(xp);
+    }
+
+    async function doConvertAmount(xpAmount) {
+        if (!user) { showToast('Please log in first.', false); return; }
+        if (!xpAmount || xpAmount <= 0) { showToast('Enter a valid XP amount.', false); return; }
+        if (xpAmount % 10 !== 0) { showToast('XP must be a multiple of 10.', false); return; }
+        if (xpAmount > _currentXP) { showToast(`Not enough XP! You have ${_currentXP} XP.`, false); return; }
+
+        try {
+            const res = await fetch(`${API_BASE}/user/convert-xp/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, xp_amount: xpAmount })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                showToast(data.error || 'Conversion failed.', false);
+                return;
+            }
+
+            // Success — update UI
+            const moneyGained = xpAmount * 10;
+            _txLog.unshift({ xp: xpAmount, money: moneyGained, ts: new Date() });
+            _currentXP = data.xp;
+
+            showToast(`Converted ${xpAmount} XP → Rs.${moneyGained.toLocaleString('en-IN')}`, true);
+            renderTxLog();
+            await loadWallet();
+            await loadMiniLB();
+
+        } catch(e) {
+            showToast('Network error — is the server running?', false);
+            console.error(e);
+        }
+    }
+
+    function renderTxLog() {
+        if (!_txLog.length) return;
+        let html = '';
+        _txLog.slice(0, 8).forEach(tx => {
+            const time = tx.ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+            html += `<div class="tx-row">
+                <div>
+                    <div style="font-weight:700; font-size:0.85rem;">Converted ${tx.xp} XP</div>
+                    <div class="tx-desc">${time}</div>
+                </div>
+                <div class="tx-amount">+Rs.${tx.money.toLocaleString('en-IN')}</div>
+            </div>`;
+        });
+        document.getElementById('tx-log').innerHTML = html;
+    }
+
+    function showToast(msg, success = true) {
+        const t = document.getElementById('toast');
+        t.innerText = (success ? '✅ ' : '❌ ') + msg;
+        t.style.background = success ? '#065f46' : '#7f1d1d';
+        t.style.display = 'block';
+        t.style.animation = 'none';
+        t.offsetHeight;
+        t.style.animation = 'toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+        setTimeout(() => { t.style.display = 'none'; }, 4000);
+    }
+
+    // Init
+    loadWallet();
+    loadMiniLB();
+    setInterval(loadMiniLB, 10000); // refresh leaderboard every 10s
+</script>
+</body>
+</html>
